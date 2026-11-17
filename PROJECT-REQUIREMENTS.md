@@ -1,7 +1,7 @@
 # Yêu cầu Dự án: Trợ lý Tra cứu Quyền lợi An sinh (P01)
 
 - **Môn học:** Tư duy Trí tuệ nhân tạo (HK1 · 2026–2027)
-- **Đích SDG:** `1.3` — Mở rộng độ phủ an sinh xã hội cho người nghèo và nhóm dễ bị tổn thương *(theo [Extended-Report-2026_Goal-1.pdf](Extended-Report-2026_Goal-1.pdf), tỷ lệ phủ toàn cầu năm 2023 mới đạt 52.4%, trợ cấp thất nghiệp chỉ 16.7%)*.
+- **Đích SDG:** `1.3` — Mở rộng độ phủ an sinh xã hội cho người nghèo và nhóm dễ bị tổn thương *(theo [Extended-Report-2026_Goal-1.pdf](document/Extended-Report-2026_Goal-1.pdf), tỷ lệ phủ toàn cầu năm 2023 mới đạt 52.4%, trợ cấp thất nghiệp chỉ 16.7%)*.
 - **Định hướng cốt lõi:** Xây dựng **nguyên mẫu (prototype) chạy được** kèm **hồ sơ thiết kế & kiểm thử đầy đủ** theo 7 đặc tính Responsible AI và khung NIST AI RMF (`GOVERN`, `MAP`, `MEASURE`, `MANAGE`).
 
 ---
