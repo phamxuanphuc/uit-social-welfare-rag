@@ -1,52 +1,45 @@
-# Yêu cầu Dự án: Trợ lý Tra cứu Quyền lợi An sinh (P01)
+# Yêu cầu Dự án: Trợ lý Tra cứu Quyền lợi An sinh (SDG 1.3 - P01)
 
 - **Môn học:** Tư duy Trí tuệ nhân tạo (HK1 · 2026–2027)
 - **Đích SDG:** `1.3` — Mở rộng độ phủ an sinh xã hội cho người nghèo và nhóm dễ bị tổn thương *(theo [Extended-Report-2026_Goal-1.pdf](document/Extended-Report-2026_Goal-1.pdf), tỷ lệ phủ toàn cầu năm 2023 mới đạt 52.4%, trợ cấp thất nghiệp chỉ 16.7%)*.
-- **Định hướng cốt lõi:** Xây dựng **nguyên mẫu (prototype) chạy được** kèm **hồ sơ thiết kế & kiểm thử đầy đủ** theo 7 đặc tính Responsible AI và khung NIST AI RMF (`GOVERN`, `MAP`, `MEASURE`, `MANAGE`).
+- **Tài liệu kiến trúc liên quan:** [CONTEXT.md](CONTEXT.md), [ADR 0001](docs/adr/0001-cpu-only-gguf-onnx-runtime.md), [ADR 0002](docs/adr/0002-dual-mode-rag-with-hard-safety-guardrails.md), [ADR 0003](docs/adr/0003-raft-dora-orpo-grpo-imatrix-pipeline.md).
 
 ---
 
-## 1. Phạm vi & Chức năng tối thiểu (Functional Requirements)
+## 1. Kiến trúc Kỹ thuật & Hạ tầng $0
 
-1. **Đầu vào:** Câu hỏi tiếng Việt (ngôn ngữ chuẩn hoặc đời thường) + **địa bàn giả lập** được chọn.
-2. **Tiền xử lý & Bảo vệ riêng tư:**
-   - Che (mask/redact) thông tin định danh cá nhân (CCCD, SĐT, họ tên) trước khi ghi log.
-   - Chuẩn hóa cách diễn đạt đời thường sang thuật ngữ hành chính.
-3. **Truy xuất & Kiểm soát hiệu lực (RAG):**
-   - Lọc văn bản theo địa bàn giả lập và truy xuất các điều khoản liên quan.
-   - Kiểm tra **trạng thái hiệu lực** (`active` / `expired`) và **ngưỡng tin cậy (Decision Threshold)**.
-4. **Đầu ra & Cơ chế an toàn (Human-in-the-loop):**
-   - **Trường hợp hợp lệ:** Trả danh sách giấy tờ cần chuẩn bị, nơi nộp hồ sơ, kèm **trích dẫn gốc** (tên văn bản, điều khoản, ngày hiệu lực, đoạn trích).
-   - **Trường hợp văn bản hết hiệu lực:** Không tự tin hướng dẫn theo nguồn cũ; cảnh báo **"Cần xác minh"** và gợi ý chuyển cán bộ.
-   - **Trường hợp thiếu địa bàn / dưới ngưỡng tin cậy / sai định dạng:** Từ chối an toàn, yêu cầu bổ sung hoặc hướng dẫn đường chuyển cán bộ.
+- **Backend & AI Runtime (Azure Container Apps — 2 CPU / 4 GiB RAM, Scale-to-Zero):** Python 3.11, FastAPI, Uvicorn, Pydantic v2, Loguru (Structured JSON Logging); `llama-cpp-python` (`Qwen3-1.7B-Q4_K_M.gguf` trên CPU), `fastembed` (ONNX Dense + BM25), `FlashRank` (ONNX Reranker). Tuyệt đối không cài PyTorch/TensorFlow trong container thực thi để giữ RAM < 2.5 GB.
+- **Vector DB & Audit Storage:** Qdrant Cloud (Free Tier) lọc kép `region IN [selected_region, "Toàn quốc"]`; SQLite/PostgreSQL + SQLAlchemy lưu `audit_logs`, `delayed_labels` (gắn `trace_id`) và `policy_approval_logs` (giữ file seed `data/mock_policies.json` bất biến).
+- **Frontend:** 2 chế độ — Giao diện Người dân (chọn địa bàn, chat, thẻ trích dẫn, báo lỗi) và Bảng điều khiển Cán bộ (đổi trạng thái hiệu lực văn bản qua `PATCH /api/admin/policies/{doc_code}/status` xác thực `X-API-Key` + `X-Role: Officer`).
+- **Dual-Mode & MLOps CI/CD:** Tự động chạy Local Hybrid Engine khi CI/test chưa nạp `.gguf`/Qdrant; GitHub Actions chạy `pytest` Quality Gate, build Docker `python:3.11-slim` đẩy lên GHCR, deploy Azure Container Apps kèm Revision Rollback, lưu **Release Dossier** và cảnh báo **Data/Concept Drift** kích hoạt Continuous Training (CT).
 
 ---
 
-## 2. Yêu cầu Dữ liệu & Vận hành (Data & MLOps)
+## 2. Pipeline Fine-tuning Qwen3-1.7B (Google Colab T4)
 
-- **Dữ liệu giả lập (tách riêng khỏi mã nguồn):** Tập văn bản an sinh giả lập có metadata bắt buộc (`doc_id`, `title`, `version`, `effective_date`, `expiry_date`, `status`, `region`, `submission_place`, `clauses`), bao gồm cả văn bản còn hiệu lực và hết hiệu lực.
-- **Tách tập đánh giá (No Data Leakage):** Bộ câu hỏi kiểm thử giữ riêng (gồm câu chuẩn, câu đời thường, ca hết hiệu lực, ca thiếu địa bàn, ca chứa PII) tách biệt với dữ liệu/từ điển dùng để tinh chỉnh.
-- **Đối chiếu Baseline:** So sánh hiệu năng với phương án đơn giản (tìm kiếm từ khóa thuần túy).
-- **Nhật ký & Tái lập (Audit Log & Reproducibility):** Ghi nhận phiên bản văn bản, câu hỏi đã che PII, điểm tin cậy, quyết định hệ thống và không làm lộ API key/secret trong log.
-
----
-
-## 3. Yêu cầu Minh chứng Responsible AI (100 điểm)
-
-| Trục đánh giá | Điểm | Yêu cầu kiểm chứng bắt buộc |
-|---|---|---|
-| **Hợp lệ & Tin cậy** | 20 | Chốt ngưỡng trước khi thử; đo tỷ lệ hướng dẫn đúng trên tập giữ riêng; so với baseline & phân tích lỗi. |
-| **Công bằng** | 15 | So sánh kết quả giữa **câu hỏi chuẩn** và **câu hỏi đời thường** (cỡ mẫu, chênh lệch, biện pháp giảm lệch). |
-| **Bảo mật & Chống chịu** | 15 | Thử câu hỏi thiếu địa bàn, văn bản hết hiệu lực, tệp/input sai định dạng; kiểm tra log không lộ secret. |
-| **An toàn** | 15 | Mô phỏng hậu quả nộp thiếu giấy tờ; kiểm thử ngưỡng cảnh báo, từ chối và đường chuyển cán bộ. |
-| **Giải thích được** | 10 | Hiển thị điều khoản, ngày hiệu lực, đoạn trích gốc và mức chắc chắn của kết quả. |
-| **Quyền riêng tư** | 10 | Kiểm chứng cơ chế che số định danh (CCCD/SĐT) trước khi ghi log; mô tả luồng thu/lưu/xóa dữ liệu. |
-| **Trách nhiệm & Minh bạch** | 15 | Ghi phiên bản văn bản; phân vai người duyệt/cập nhật nguồn hết hiệu lực & người có quyền dừng hệ thống. |
+- **Dữ liệu (`data/mock_policies.json` + PDF SDG 1.3):** Chia tập `80/10/10` theo nhóm kịch bản gốc (`Scenario-Group Split`) tránh Data Leakage; chuẩn bị dữ liệu RAFT (70% có 1 Oracle + 2 Distractors, 30% toàn Distractors dạy từ chối) với `verification_reasoning` làm key đầu tiên của JSON Schema.
+- **Huấn luyện & Căn chỉnh:** Log lên `wandb`; Giai đoạn 1 SFT (`lr=2e-4`) dùng `Unsloth + Liger Kernel + 4-bit NF4 + DoRA + rsLoRA + NEFTune (alpha=5)` (kèm fallback `PEFT DoRA`); Giai đoạn 2 (`ORPO 5e-6` → `GRPO 1e-6`, `num_generations=4`) với 3 hàm thưởng kiểm chứng tự động phạt gấp đôi lỗi bỏ sót `expired_warning`.
+- **Đánh giá & Nén GGUF:** Đo qua 4 mốc (`Baseline` → `SFT+DoRA` → `ORPO+GRPO` → `Q4_K_M.gguf + imatrix`) bằng Deterministic Metrics + `Ragas` (hỗ trợ Local/Free Judge) kèm kiểm tra độ ổn định qua 3 lần chạy.
 
 ---
 
-## 4. Sản phẩm bàn giao
+## 3. Tiêu chuẩn 7 Trục Responsible AI & Ngưỡng Chốt Trước
 
-- Mã nguồn nguyên mẫu + hướng dẫn cài đặt, chạy thử.
-- Dữ liệu mẫu giả lập & bộ kiểm thử tự động (pass 100%).
-- Báo cáo ngắn (mục tiêu, luồng dữ liệu, kết quả đo 7 trục, bảng rủi ro NIST AI RMF, giới hạn hệ thống) và nhật ký đóng góp nhóm.
+- **Baseline đối chiếu:** BM25 thuần + `Qwen3-1.7B Base` (chưa chuẩn hóa từ đời thường).
+- **Ngưỡng đạt chốt trước (Pre-defined Thresholds):**
+  - `Faithfulness >= 0.85` · `Citation Precision >= 0.90` · `Refusal Accuracy >= 0.90` · `Expired Detection = 100%` · `Fairness Gap (Chuẩn vs. Đời thường) <= 10%`.
+- **Quyền riêng tư:** Che CCCD (9–12 số) và SĐT di động kể cả khi viết cách bằng khoảng trắng/dấu chấm/gạch ngang thành `[ĐÃ_CHE_ĐỊNH_DANH]` trước khi ghi log/DB (không che nhầm số tiền hay hotline cố định); không gửi dữ liệu thô cho LLM bên thứ 3; hỗ trợ xóa theo `trace_id` / TTL 30 ngày; ghi rõ giới hạn không nhận diện được danh tính mô tả tự do.
+- **Bảo mật & Chống chịu:** Từ chối ngay khi thiếu `region` (không gọi LLM); phát hiện lệch địa bàn chéo (**CrossRegionConflict**); khóa cứng `expired_warning` và `required_documents` từ metadata gốc chống Prompt Injection; ẩn `***REDACTED***` mọi API key trong log; tự động fallback về kho Local khi Qdrant mất kết nối.
+- **An toàn & Giải thích 3 lớp:** Hiển thị (1) từ đời thường đã quy đổi, (2) thẻ trích dẫn nguyên văn (`doc_code`, `article`, `effective_date`, `version`), (3) nhãn mức độ chắc chắn `Cao / Trung bình / Thấp - Cần hỏi cán bộ` kèm **ResidualRisk** (chỉ hỗ trợ chuẩn bị hồ sơ, không thay thế quyết định hành chính). Kích hoạt **KillSwitch** tự động/bởi Officer khi lọt văn bản hết hạn `> 0%` hoặc tỷ lệ báo lỗi nhãn trễ `> 15%`.
+
+---
+
+## 4. Khung Quản trị NIST AI RMF & Bảng Rủi ro Ưu tiên
+
+- **Phân vai (`GOVERN`):** `Data Steward` (dữ liệu & chống rò rỉ), `Evaluation & QA Lead` (Release Dossier & giám sát Drift), `Policy Approver & Safety Officer` (duyệt hiệu lực & nắm quyền `KillSwitch`).
+
+| Tình huống | Bên bị ảnh hưởng | Khả năng & Hậu quả | Điều kiện đạt | Kết quả trước sửa | Biện pháp (`MANAGE`) | Kết quả thử lại | Người phụ trách & Quyết định |
+|---|---|---|---|---|---|---|---|
+| **R1:** Văn bản hết hiệu lực (`expired`) hoặc LLM bịa giấy tờ | Người lao động & cán bộ tiếp nhận | Cao · Bị trả hồ sơ, trễ đợt chi trả, mất niềm tin | Expired Detection = 100%; Refusal Acc >= 0.90 | Baseline dễ dùng nguồn cũ hoặc bịa thủ tục | Khóa cứng metadata gốc + RAFT 30% Refusal + GRPO phạt gấp đôi FN | Chờ đo sau khi chạy Notebook 02 & `pytest` | Safety Officer · Tiếp tục demo nếu đạt 100% cảnh báo |
+| **R2:** Câu hỏi đời thường (xe ôm, vé số, phụ hồ) hiểu sai ý | Lao động phi chính thức ít tiếp xúc văn bản luật | Trung bình–Cao · Truy xuất sót quyền lợi hợp lệ | Fairness Gap (Chuẩn vs. Đời thường) <= 10% | BM25 thuần kém ở câu đời thường | Bảng `colloquial_mappings` + Hybrid Dense/BM25 + SFT DoRA | Chờ đo trên cặp câu hỏi song song tập Test | Evaluation & QA Lead · Mở rộng từ điển nếu lệch > 10% |
+| **R3:** Nhập CCCD/SĐT vào chat hoặc chọn nhầm địa bàn chéo | Người dân gửi dữ liệu cá nhân | Trung bình · Lộ PII vào log hoặc nộp sai nơi tiếp nhận | 0% PII thô trong log/DB; 100% bắt lệch địa bàn | Prompt thô ghi nguyên văn vào log | Regex PII mở rộng + Check `CrossRegionConflict` + xóa theo `trace_id` | Chờ xác thực qua `pytest tests/test_ai.py` | Data Steward · Bắt buộc pass 100% Gate mới deploy |
