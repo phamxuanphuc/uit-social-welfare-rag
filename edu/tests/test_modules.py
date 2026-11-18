@@ -22,8 +22,8 @@ def blocks(path: Path, lang: str):
     return [textwrap.dedent(code) for lg, code in BLOCK_RE.findall(path.read_text(encoding="utf-8")) if lg == lang]
 
 
-def test_has_15_modules():
-    assert [p.name[:9] for p in MODULES] == [f"module-{i:02d}" for i in range(15)]
+def test_has_16_modules():
+    assert [p.name[:9] for p in MODULES] == [f"module-{i:02d}" for i in range(16)]
 
 
 @pytest.mark.parametrize("path", MODULES, ids=lambda p: p.name)
