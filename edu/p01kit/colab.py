@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.metadata as md
 import re
+import shutil
 import subprocess
 import tarfile
 from pathlib import Path
@@ -129,7 +130,7 @@ def restore_llamacpp_build(build_dir: str | Path = LLAMA_CPP_BUILD, cache: str |
     """Giải nén bản build từ Drive về đúng đường dẫn cũ rồi chạy thử `llama-server --version`.
 
     Trả về False (→ phải biên dịch lại) nếu chưa có bản lưu hoặc bản lưu không chạy được, ví dụ khi Colab đổi
-    image và thư viện CUDA không còn khớp.
+    image và thư viện CUDA không còn khớp. Bản hỏng bị xóa để ô biên dịch (`test -x ... || cmake ...`) chạy lại.
     """
     cache = Path(cache) if cache else llamacpp_cache_file()
     if not cache.exists():
@@ -141,6 +142,9 @@ def restore_llamacpp_build(build_dir: str | Path = LLAMA_CPP_BUILD, cache: str |
     server = build_dir / "bin" / "llama-server"
     server.chmod(0o755)
     try:
-        return subprocess.run([str(server), "--version"], capture_output=True, timeout=60).returncode == 0
+        ok = subprocess.run([str(server), "--version"], capture_output=True, timeout=60).returncode == 0
     except (OSError, subprocess.TimeoutExpired):
-        return False
+        ok = False
+    if not ok:
+        shutil.rmtree(build_dir / "bin", ignore_errors=True)
+    return ok

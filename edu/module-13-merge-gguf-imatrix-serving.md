@@ -79,14 +79,25 @@ del base16, merged; free()
 ```
 - 📌 **Kết quả nên thấy:** `config.json`, `model.safetensors` (~3,4 GB), các file tokenizer. Không còn `adapter_config.json` → đây là mô hình độc lập.
 
-### Khối 3 — Biên dịch llama.cpp (ghim tag, chỉ build đúng kiến trúc T4)
+### Khối 3 — Biên dịch llama.cpp (ghim tag, chỉ build đúng kiến trúc T4) — hoặc khôi phục từ Drive
+```python
+from p01kit.colab import restore_llamacpp_build, save_llamacpp_build
+if not os.path.exists("/content/llama.cpp"):        # mã nguồn cần cho convert_hf_to_gguf.py (clone nông, vài giây)
+    subprocess.run(["git", "clone", "--depth", "1", "--branch", "b12084", "https://github.com/ggml-org/llama.cpp", "/content/llama.cpp"], check=True)
+CACHED = restore_llamacpp_build()
+print("✅ Dùng lại bản build trên Drive — bỏ qua 2 ô biên dịch" if CACHED else "Chưa có bản build hợp lệ → ô dưới sẽ biên dịch")
+```
 ```bash
-!git clone --depth 1 --branch b12084 https://github.com/ggml-org/llama.cpp /content/llama.cpp
-!cmake -S /content/llama.cpp -B /content/llama.cpp/build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
-!cmake --build /content/llama.cpp/build -j 4 --target llama-quantize llama-imatrix llama-server llama-bench
-!ls /content/llama.cpp/build/bin
+!test -x /content/llama.cpp/build/bin/llama-server || cmake -S /content/llama.cpp -B /content/llama.cpp/build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release
+!test -x /content/llama.cpp/build/bin/llama-server || cmake --build /content/llama.cpp/build -j $(nproc) --target llama-quantize llama-imatrix llama-server llama-bench
+```
+```python
+if not CACHED:
+    print("Đã lưu bản build lên Drive:", save_llamacpp_build())   # Buổi 15 và lần chạy lại Buổi 13 sẽ dùng lại
+print(sorted(os.listdir("/content/llama.cpp/build/bin")))
 ```
 - **Giải thích:** `--branch b12084` ghim phiên bản (tái lập được); `CMAKE_CUDA_ARCHITECTURES=75` chỉ biên dịch cho T4 → nhanh hơn nhiều so với build mọi kiến trúc; chỉ build 4 công cụ cần dùng.
+- 💡 **Colab miễn phí:** runtime miễn phí chỉ có 2 vCPU nên biên dịch CUDA mất nhiều thời gian (ghi lại số phút của bạn). Bản build (`build/bin`, gồm chương trình và thư viện `.so`) được nén lên `p01_runs/cache/` ngay sau lần biên dịch đầu; mọi phiên sau chỉ giải nén và chạy thử `llama-server --version`. Nếu Colab đổi image và bản lưu không chạy được, nó bị xóa và ô biên dịch tự chạy lại.
 - ⚠️ **Không** cài `requirements` của llama.cpp vào môi trường này — file đó có thể hạ cấp `torch`/`transformers` đã ghim. Script chuyển đổi tự dùng thư viện `gguf-py` đi kèm repo.
 
 ### Khối 4 — Chuyển sang GGUF F16 & tạo văn bản hiệu chuẩn (chỉ từ TRAIN)
@@ -122,8 +133,8 @@ from p01kit.llamacpp import complete, ANSWER_JSON_SCHEMA
 from p01kit.prompts import render_prompt
 from p01kit.metrics import score_one, summarize, format_summary
 
-def start_server(gguf, ngl=99, threads=None, port=8080):
-    cmd = [f"{BIN}/llama-server", "-m", gguf, "-c", "2048", "-ngl", str(ngl), "--port", str(port), "-np", "1"]
+def start_server(gguf, ngl=99, threads=None, port=8080, slots=1):
+    cmd = [f"{BIN}/llama-server", "-m", gguf, "-c", str(2048 * slots), "-ngl", str(ngl), "--port", str(port), "-np", str(slots)]
     if threads: cmd += ["-t", str(threads)]
     proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     for _ in range(120):
@@ -135,16 +146,21 @@ def start_server(gguf, ngl=99, threads=None, port=8080):
         time.sleep(1)
     proc.kill(); raise RuntimeError("llama-server không khởi động được")
 
+from concurrent.futures import ThreadPoolExecutor
+from p01kit.runs import once
 prompts = [render_prompt(tok, r) for r in test]           # cùng prompt với lúc train (enable_thinking=False)
-def eval_gguf(name, schema=True):
-    proc = start_server(f"{WORK}/p01-{name}.gguf")
-    try:
-        outs = [complete(p, json_schema=ANSWER_JSON_SCHEMA if schema else None)["text"] for p in prompts]
-    finally:
-        proc.terminate(); proc.wait()
-    s = summarize([score_one(o, r) for o, r in zip(outs, test)])
-    scoreboard.record("M13", f"gguf-{name}{'' if schema else '-noschema'}", s)
-    return s
+def eval_gguf(name, schema=True, slots=4):
+    def run():
+        proc = start_server(f"{WORK}/p01-{name}.gguf", slots=slots)
+        try:
+            with ThreadPoolExecutor(slots) as ex:              # 4 request song song = 4 slot của llama-server
+                outs = list(ex.map(lambda p: complete(p, json_schema=ANSWER_JSON_SCHEMA if schema else None)["text"], prompts))
+        finally:
+            proc.terminate(); proc.wait()
+        s = summarize([score_one(o, r) for o, r in zip(outs, test)])
+        scoreboard.record("M13", f"gguf-{name}{'' if schema else '-noschema'}", s)
+        return s
+    return once("m13", f"eval_{name}{'' if schema else '_noschema'}", run)   # bị ngắt → biến thể đã chấm được bỏ qua
 
 gguf_res = {"F16": eval_gguf("f16")}
 for name in variants:
@@ -154,6 +170,8 @@ for k, s in gguf_res.items():
     print(f"{k:<28} json={s['json_valid']:.3f} schema={s['schema_ok']:.3f} answer={s['answer_acc']:.3f} strict={s['strict_acc']:.3f} expired={s['expired_recall']}")
 ```
 - **Giải thích:** đo chất lượng trên **GPU** (`-ngl 99`) cho nhanh — kết quả số học của GGUF trên GPU và CPU gần như tương đương; độ trễ CPU đo riêng ở Khối 7.
+- 💡 **Colab miễn phí:** chấm 8 biến thể là phần tốn GPU nhất buổi. `slots=4` cho `llama-server` xử lý 4 câu cùng lúc (`-c` là tổng ngữ cảnh, chia đều cho các slot) thay vì từng câu một; `once` lưu điểm từng biến thể lên Drive. Lưu ý: file GGUF nằm ở ổ đĩa tạm `/content/deploy` (bản gộp FP16 + 6 file GGUF, ~12 GB, không vừa Drive miễn phí) — nếu runtime bị ngắt, phải chạy lại Khối 2–5 để tạo lại file, nhưng các biến thể đã chấm không phải chấm lại.
+- ⚠️ Với nhiều slot, llama.cpp ghép các câu thành batch nên kết quả greedy có thể lệch rất nhẹ so với `slots=1` (thứ tự cộng số thực khác nhau). So sánh các biến thể với nhau vẫn công bằng vì cùng cấu hình; độ trễ một người dùng ở Khối 7 vẫn đo với 1 slot.
 - 📌 **Cách đọc:** F16 là trần chất lượng của bản gộp; Q8_0 gần như không mất; so `Q4_K_M` với `Q4_K_M-imat` và `Q3_K_M` với `Q3_K_M-imat` để thấy imatrix có tác dụng **lớn hơn ở mức bit thấp** hay không. Dòng "không schema" cho biết constrained decoding đóng góp bao nhiêu vào `json_valid`/`schema_ok`.
 
 ### Khối 7 — Độ trễ trên CPU: TTFT, token/s, và dự báo cho Azure 2 vCPU

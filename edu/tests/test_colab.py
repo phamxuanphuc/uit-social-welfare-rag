@@ -59,3 +59,4 @@ def test_restore_fails_without_cache_or_with_broken_binary(tmp_path):
     build = _fake_build(tmp_path / "a", "#!/bin/sh\nexit 127\n")          # ví dụ: thiếu libcudart sau khi Colab đổi image
     cache = save_llamacpp_build(build, tmp_path / "c.tgz")
     assert not restore_llamacpp_build(tmp_path / "b", cache)
+    assert not (tmp_path / "b" / "bin").exists()                         # xóa bản hỏng → ô biên dịch sẽ build lại

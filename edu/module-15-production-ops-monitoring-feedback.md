@@ -86,9 +86,6 @@ Buổi này đi trọn vòng đời đó trên chính hệ thống P01:
 ```bash
 !pip install -q fastapi==0.162.0 uvicorn==0.54.0 httpx==0.28.1
 ```
-```bash
-!test -x /content/llama.cpp/build/bin/llama-server || (git clone --depth 1 --branch b12084 https://github.com/ggml-org/llama.cpp /content/llama.cpp && cmake -S /content/llama.cpp -B /content/llama.cpp/build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release && cmake --build /content/llama.cpp/build -j 4 --target llama-server)
-```
 ```python
 import os, sys, json, time, shutil, subprocess, threading
 sys.path.insert(0, "/content/uit-social-welfare-rag/edu")
@@ -108,6 +105,16 @@ GGUF = "/content/deploy/p01-Q4_K_M-imat.gguf"
 os.makedirs("/content/deploy", exist_ok=True)
 if not os.path.exists(GGUF):
     shutil.copy(adapter_path("m13", "gguf") / "p01-Q4_K_M-imat.gguf", GGUF)
+from p01kit.colab import restore_llamacpp_build, save_llamacpp_build
+CACHED = restore_llamacpp_build()        # bản build đã lưu ở Buổi 13 → không phải biên dịch lại
+print("✅ llama.cpp khôi phục từ Drive" if CACHED else "Chưa có bản build trên Drive → ô dưới sẽ biên dịch llama-server")
+```
+```bash
+!test -x /content/llama.cpp/build/bin/llama-server || (git clone --depth 1 --branch b12084 https://github.com/ggml-org/llama.cpp /content/llama.cpp && cmake -S /content/llama.cpp -B /content/llama.cpp/build -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release && cmake --build /content/llama.cpp/build -j $(nproc) --target llama-server)
+```
+```python
+if not CACHED:
+    save_llamacpp_build()
 
 def start_server(gguf, ngl=99, slots=4, threads=None, port=8080):
     cmd = ["/content/llama.cpp/build/bin/llama-server", "-m", gguf, "-c", str(2048 * slots), "-np", str(slots),
