@@ -95,3 +95,17 @@ def test_p01kit_imports_exist(path):
                 for alias in node.names:
                     assert hasattr(mod, alias.name) or importlib.util.find_spec(f"{node.module}.{alias.name}"), \
                         f"{path.name}: {node.module} không có '{alias.name}'"
+
+
+@pytest.mark.parametrize("path", MODULES, ids=lambda p: p.name)
+def test_no_undefined_names(path):
+    """Ghép các ô Python theo thứ tự như một notebook: mọi tên phải được import/định nghĩa trước khi dùng."""
+    checker = pytest.importorskip("pyflakes.checker")
+    from pyflakes.messages import UndefinedName
+
+    tree = ast.parse("\n".join(blocks(path, "python")))
+    # `del model; free()` cấp ngoài cùng chỉ để giải phóng VRAM; pyflakes kiểm thân hàm SAU mọi lệnh del,
+    # nên giữ lại sẽ báo nhầm cho hàm đã định nghĩa (và dùng xong) trước khi del.
+    tree.body = [n for n in tree.body if not isinstance(n, ast.Delete)]
+    undefined = sorted({m.message_args[0] for m in checker.Checker(tree).messages if isinstance(m, UndefinedName)})
+    assert not undefined, f"{path.name}: dùng tên chưa import/định nghĩa: {undefined}"

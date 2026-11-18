@@ -105,7 +105,7 @@ os.environ["P01_RUNS"] = "/content/drive/MyDrive/p01_runs"
 ```bash
 python -m venv .venv && .venv/bin/pip install -r edu/requirements-dev.txt && .venv/bin/python -m pytest edu/tests -q
 ```
-Bộ test kiểm tra cả **nội dung bài học**: mọi ô Python phải đúng cú pháp, không dùng API đã bị bỏ ở bộ thư viện đã ghim (`warmup_ratio`, `torch_dtype=`, `max_prompt_length`...), lệnh `pip` phải ghim phiên bản, `unsloth` phải được import trước `transformers`/`trl`/`peft`, mọi `from p01kit... import` phải tồn tại.
+Bộ test kiểm tra cả **nội dung bài học**: mọi ô Python phải đúng cú pháp, không dùng tên chưa import/định nghĩa (ghép các ô theo thứ tự như một notebook, kiểm bằng `pyflakes`), không ghép token vào URL, không dùng API đã bị bỏ ở bộ thư viện đã ghim (`warmup_ratio`, `torch_dtype=`, `max_prompt_length`...), lệnh `pip` phải ghim phiên bản, `unsloth` phải được import trước `transformers`/`trl`/`peft`, mọi `from p01kit... import` phải tồn tại.
 
 ## Quy ước ký hiệu trong bài
 - 📌 **Kết quả nên thấy** — con số ghi "(tất định)" hoặc "(đã đo)" là số chính xác đã kiểm chứng ngoài GPU (thống kê dữ liệu, số tham số, độ dài token, BM25). Các chỉ số mô hình sau khi train **phụ thuộc lượt chạy của bạn**, nên bài chỉ nêu dấu hiệu/kiểm tra hợp lý, không bịa số.
