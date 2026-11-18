@@ -59,11 +59,22 @@ def load_model(model_id: str = MODEL_ID, adapter: str | Path | None = None, four
     if four_bit:
         kw["quantization_config"] = bnb_4bit_config()
     model = AutoModelForCausalLM.from_pretrained(model_id, **kw)
+    if trainable and four_bit:
+        from peft import prepare_model_for_kbit_training
+
+        # norm -> FP32, bật input grads + gradient checkpointing cho nền 4-bit đóng băng
+        model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True,
+                                                gradient_checkpointing_kwargs={"use_reentrant": False})
     if adapter is not None:
         from peft import PeftModel
 
         model = PeftModel.from_pretrained(model, str(adapter), is_trainable=trainable)
-    if not trainable:
+    if trainable:
+        # Trọng số học được PHẢI là FP32 khi train fp16=True (GradScaler không unscale được grad FP16).
+        for p in model.parameters():
+            if p.requires_grad and p.dtype != torch.float32:
+                p.data = p.data.float()
+    else:
         model.eval()
     torch.manual_seed(0)
     return model
