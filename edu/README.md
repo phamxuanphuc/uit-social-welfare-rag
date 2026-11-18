@@ -6,6 +6,8 @@
 - **So sánh hiệu quả trên cùng 100 câu test giữ riêng**, cùng prompt, cùng bộ chấm. Kết quả ghi vào một **bảng điểm xuyên suốt** (`leaderboard.csv`), kèm khoảng tin cậy và kiểm định McNemar.
 - Có **câu hỏi phỏng vấn kèm đáp án**, **bài tập** bắt buộc/nâng cao và **checklist**.
 
+> ⚠️ **Dữ liệu GIẢ LẬP — không dùng để tra cứu thủ tục thật.** Toàn bộ văn bản chính sách trong [`data/policies.json`](data/policies.json) là **hư cấu** phục vụ học tập. Mã văn bản (ví dụ `NQ-01/2026/HĐND-HCM`), điều khoản, mức tiền, giấy tờ và nơi nộp đều do nhóm tự đặt. Tên địa bàn (TP.HCM, Phường Tân Tạo, Quận Liên Chiểu…) có thật nhưng **không có văn bản nào ở đây do cơ quan nhà nước ban hành**. Mô hình huấn luyện theo lộ trình này chỉ "biết" các văn bản hư cấu đó; muốn biết quyền lợi thật, hãy hỏi cán bộ UBND/BHXH nơi cư trú.
+
 ## Hai giai đoạn sư phạm
 | Giai đoạn | Buổi | Cách viết code |
 |---|---|---|

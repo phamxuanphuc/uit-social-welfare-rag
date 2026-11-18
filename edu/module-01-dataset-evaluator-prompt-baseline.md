@@ -25,6 +25,7 @@ Buổi này trả lời cả 3 câu, rồi thử giải bài toán **chỉ bằn
 
 ### 1.1. Bộ dữ liệu P01 được thiết kế thế nào (đọc [`p01kit/data.py`](p01kit/data.py))
 - **Kho văn bản giả lập:** 23 văn bản ([`data/policies.json`](data/policies.json)) thuộc 11 chủ đề an sinh, 3 địa bàn + cấp Toàn quốc; 5 văn bản **đã hết hiệu lực**, trong đó 2 văn bản đã có bản mới thay thế.
+  - ⚠️ Mã văn bản, điều khoản, mức tiền và giấy tờ đều **hư cấu** (xem khóa `_disclaimer` trong file), chỉ tên địa bàn là có thật. Khi chia sẻ output của mô hình (ảnh chụp, demo), luôn ghi kèm *"dữ liệu giả lập"* để không ai nhầm với quy định thật.
 - **Kịch bản (scenario)** = (văn bản, ý định hỏi) với 3 ý định: *hồ sơ gồm gì*, *nộp ở đâu*, *mức hỗ trợ*. Mỗi kịch bản sinh **6 biến thể câu hỏi**: 3 giọng chuẩn (formal) + 3 giọng đời thường (colloquial) — ghép cặp theo `pair_id` để đo **Fairness Gap**.
 - **RAFT (Retrieval-Augmented Fine-Tuning):** mỗi câu hỏi kèm **3 đoạn ngữ cảnh**. ~70% câu có 1 văn bản đúng + 2 văn bản nhiễu *khó* (cùng chủ đề khác địa bàn, bản cũ hết hạn, cùng địa bàn khác chủ đề). ~30% câu **bị rút văn bản đúng** → chỉ còn nhiễu → mô hình phải **từ chối**.
 - **Nhãn suy ra bằng luật, không viết tay:** hàm `resolve()` chọn văn bản đúng theo thứ tự *đúng chủ đề & địa bàn ∈ {đã chọn, Toàn quốc}* → *còn hiệu lực trước* → *địa phương trước Toàn quốc*. Nhờ vậy **0 nhãn mâu thuẫn**, và có bộ test tự động kiểm chứng điều đó (`tests/test_data.py`).
