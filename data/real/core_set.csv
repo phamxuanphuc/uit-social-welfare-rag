@@ -12,7 +12,7 @@ id,so_ky_hieu,group,status,check,effective_until,superseded_by,evidence,checked_
 179149,159/2025/NĐ-CP,bhxh_tu_nguyen,active,portal_only,,,,,
 95650,134/2015/NĐ-CP,bhxh_tu_nguyen,expired,primary,2025-07-01,159/2025/NĐ-CP,Điều 17 khoản 2 NĐ 159/2025/NĐ-CP,2026-11-18,
 179767,11/2025/TT-BNV,bhxh_tu_nguyen,active,portal_only,,,,,
-184035,176/2025/NĐ-CP,huu_tri_xa_hoi,partial,secondary,,335/2026/NĐ-CP (ngoài kho),https://hatinh.gov.vn/vi/bai-viet/nghi-dinh-moi-quy-dinh-chinh-sach-tro-giup-xa-hoi-muc-chuan-540000-dongthang,2026-11-18,Mức 500.000 đ/tháng (Điều 3) được chuyển sang mức 540.000 đ từ 01/07/2026 theo NĐ 335/2026; chưa đọc toàn văn NĐ 335/2026 để biết điều nào bị sửa.
+184035,176/2025/NĐ-CP,huu_tri_xa_hoi,partial,primary,,335/2026/NĐ-CP,Điều 31 NĐ 335/2026/NĐ-CP,2026-11-18,"Điều 31 NĐ 335/2026 sửa khoản 1 Điều 3 (mức 500.000 → 540.000 đ/tháng), sửa Điều 4 (thủ tục) và bãi bỏ Mẫu 01, 02; đối tượng chuyển sang mức mới từ 01/07/2026."
 12326,25/2008/QH12,bhyt,partial,portal_only,,,,,"Luật gốc, đã sửa bởi 46/2014/QH13 và 51/2024/QH15."
 36793,46/2014/QH13,bhyt,partial,portal_only,,,,,
 172923,51/2024/QH15,bhyt,active,portal_only,,,,,
@@ -29,9 +29,10 @@ id,so_ky_hieu,group,status,check,effective_until,superseded_by,evidence,checked_
 186281,374/2025/NĐ-CP,bhtn,active,portal_only,,,,,
 55726,28/2015/NĐ-CP,bhtn,expired,primary,2026-01-01,374/2025/NĐ-CP,Điều 45 khoản 2 NĐ 374/2025/NĐ-CP,2026-11-18,
 148419,17/2021/QĐ-TTg,bhtn,partial,portal_only,,,,,Chưa rõ còn áp dụng sau NĐ 374/2025 — cần kiểm.
-148955,20/2021/NĐ-CP,tro_giup_xa_hoi,expired,secondary,2026-10-05,335/2026/NĐ-CP (ngoài kho),https://hatinh.gov.vn/vi/bai-viet/nghi-dinh-moi-quy-dinh-chinh-sach-tro-giup-xa-hoi-muc-chuan-540000-dongthang,2026-11-18,Cổng (ảnh 23/07/2026) ghi hết hiệu lực một phần — đã lỗi thời. NĐ 335/2026 (mức chuẩn 540.000 đ) chưa có trong kho.
-173641,76/2024/NĐ-CP,tro_giup_xa_hoi,expired,secondary,2026-10-05,335/2026/NĐ-CP (ngoài kho),https://hatinh.gov.vn/vi/bai-viet/nghi-dinh-moi-quy-dinh-chinh-sach-tro-giup-xa-hoi-muc-chuan-540000-dongthang,2026-11-18,Cổng ghi còn hiệu lực — đã lỗi thời.
-156598,02/2021/TT-BLĐTBXH,tro_giup_xa_hoi,partial,portal_only,,,,,"Hướng dẫn NĐ 20/2021 đã hết hiệu lực — có thể không còn áp dụng, cần kiểm."
+148955,20/2021/NĐ-CP,tro_giup_xa_hoi,expired,primary,2026-10-05,335/2026/NĐ-CP,Điều 32 khoản 2 NĐ 335/2026/NĐ-CP,2026-11-18,Cổng (ảnh 23/07/2026) ghi hết hiệu lực một phần — đã lỗi thời.
+173641,76/2024/NĐ-CP,tro_giup_xa_hoi,expired,primary,2026-10-05,335/2026/NĐ-CP,Điều 32 khoản 2 NĐ 335/2026/NĐ-CP,2026-11-18,Cổng (ảnh 23/07/2026) ghi còn hiệu lực — đã lỗi thời.
+sup-335-2026-ND-CP,335/2026/NĐ-CP,tro_giup_xa_hoi,active,primary,,,Điều 32 khoản 1 NĐ 335/2026/NĐ-CP (hiệu lực từ 05/10/2026),2026-11-18,"Văn bản bổ sung (supplements.csv), chữ OCR chưa soát. Mức chuẩn trợ giúp xã hội 540.000 đ/tháng (Điều 4)."
+156598,02/2021/TT-BLĐTBXH,tro_giup_xa_hoi,partial,portal_only,,,,,"Hướng dẫn NĐ 20/2021 (đã hết hiệu lực 05/10/2026) — có thể không còn áp dụng, cần kiểm."
 f8f22070-50e0-11f1-bc86-e1295469da47,98/2026/NĐ-CP,tro_giup_xa_hoi,active,portal_only,,,,,
 155948,130/2021/NĐ-CP,tro_giup_xa_hoi,expired,primary,2026-05-16,98/2026/NĐ-CP,Điều 47 khoản 2 NĐ 98/2026/NĐ-CP,2026-11-18,
 186277,351/2025/NĐ-CP,ho_ngheo,active,portal_only,,,,,Hiệu lực từ 15/02/2026; rà soát hộ nghèo theo chuẩn mới áp dụng cho giai đoạn 2027–2030.
