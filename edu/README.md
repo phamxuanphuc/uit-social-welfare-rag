@@ -132,7 +132,10 @@ Muốn chạy lại có chủ đích (đã sửa code): truyền `force=True` ch
 | `guardrails`, `grounding` | Che PII (không che nhầm số tiền/hotline), lệch địa bàn, khóa metadata, nhật ký kiểm toán |
 | `dedup`, `synthetic` | Khử trùng lặp n-gram ký tự, kiểm toán rò rỉ, lọc câu viết lại |
 | `tools`, `retrieval`, `cot`, `llamacpp` | Agent/tool calling, BM25 + Recall/MRR, vết suy luận, client llama-server + JSON Schema |
-| `scoreboard` | Bảng điểm `leaderboard.csv` trên Drive |
+| `scoreboard` | Bảng điểm `leaderboard.csv` trên Drive, **kèm output thô từng câu** của mỗi lượt (`record(..., outputs=...)`) |
+| `compare` | **So sánh trước → sau** hai lượt bất kỳ bằng cùng bộ chấm: Δ + CI, McNemar, lát cắt, loại lỗi, ví dụ câu được sửa/bị làm hỏng; `journey` cho cả khóa |
+| `vntext` | Tiếng Việt thật: NFC/NFD, hai kiểu đặt dấu (hoà/hòa), bỏ dấu, tách từ (pyvi/underthesea) |
+| `runs`, `colab` | Chạy lại an toàn sau khi Colab ngắt (`@resumable`, `resume_point`), kiểm tra môi trường, lưu bản build llama.cpp |
 | `ops`, `service`, `traffic` | Cổng champion/challenger, p95 & số replica, PSI drift, KillSwitch, Cohen's κ · API FastAPI bọc guardrail + nhật ký kiểm toán · mô phỏng traffic/báo lỗi (Buổi 15) |
 
 **Chạy kiểm thử trên máy cá nhân (CPU, không cần GPU)** — CI chạy đúng bộ này trên mỗi push/PR ([`.github/workflows/edu-tests.yml`](../.github/workflows/edu-tests.yml)):
@@ -141,8 +144,30 @@ python -m venv .venv && .venv/bin/pip install -r edu/requirements-dev.txt && .ve
 ```
 Bộ test kiểm tra cả **nội dung bài học**: mọi ô Python phải đúng cú pháp, không dùng tên chưa import/định nghĩa (ghép các ô theo thứ tự như một notebook, kiểm bằng `pyflakes`), không ghép token vào URL, không dùng API đã bị bỏ ở bộ thư viện đã ghim (`warmup_ratio`, `torch_dtype=`, `max_prompt_length`...), lệnh `pip` phải ghim phiên bản, `unsloth` phải được import trước `transformers`/`trl`/`peft`, mọi `from p01kit... import` phải tồn tại.
 
+## Từ khóa học đến đi làm
+Bảng dưới nối mỗi việc một kỹ sư LLM/AI hay được giao ở doanh nghiệp Việt Nam với buổi học tương ứng và **sản phẩm bạn đưa được vào hồ sơ năng lực** (GitHub/báo cáo/phỏng vấn).
+
+| Việc thường được giao khi đi làm | Học ở buổi | Bằng chứng trong hồ sơ |
+|---|---|---|
+| Đánh giá mô hình gốc trước khi đề xuất fine-tune | 00, 01 | Dòng baseline + báo cáo `M00 → M01` có p-value |
+| Chuẩn bị và kiểm toán dữ liệu (rò rỉ, trùng lặp, nhãn sai) | 01, 05, 07 | Báo cáo kiểm toán rò rỉ, data card, phát hiện lỗi metadata văn bản thật |
+| Fine-tune LoRA/QLoRA và giải thích được từng tham số | 02, 03, 04 | Adapter + báo cáo trước → sau từng câu, ablation có McNemar |
+| Debug lượt train hỏng (OOM, NaN, overfit) | 06 | Sổ tay debug 4 lỗi tự gây và tự sửa |
+| Căn chỉnh hành vi an toàn (từ chối, cảnh báo hết hạn) | 05, 08, 09 | Ma trận lỗi trước/sau, phân tích reward hacking |
+| Xây RAG trên văn bản tiếng Việt thật | 12 | Bảng BM25/dense trên Zalo Legal (NFC, không dấu, tách từ), cảnh báo rò rỉ mô hình |
+| Agent gọi API nội bộ | 11 | Agent end-to-end so với baseline từ khóa |
+| Đưa mô hình lên CPU/chi phí thấp | 13 | `quant_report.json`, số TTFT/token/s, báo cáo cái giá của lượng tử hóa |
+| Phát hành có trách nhiệm (guardrail, red-team, hồ sơ) | 14 | `release_dossier.json`, `MODEL_CARD.md`, bảng hành trình toàn khóa |
+| Vận hành sau phát hành (API, tải, drift, phản hồi) | 15 | `ops_report.json`, runbook, cổng champion/challenger |
+| Viết code có test và CI | Mọi buổi | `p01kit` + `pytest` + GitHub Actions của repo |
+
+**Hồ sơ tối thiểu nên có khi đi phỏng vấn:** (1) repo GitHub có `p01kit`, test và CI xanh; (2) báo cáo một trang `M00 → M14` (sinh bằng `compare_runs`) kèm 3 ví dụ câu được sửa và 1 ví dụ còn sai, giải thích vì sao; (3) bảng thực chiến Zalo Legal bạn tự tái lập; (4) trả lời trôi chảy ≥ 5 câu phỏng vấn của mỗi buổi. Nhà tuyển dụng tin **số liệu bạn tự đo và giải thích được** hơn danh sách công nghệ.
+
 ## Quy ước ký hiệu trong bài
 - 📌 **Kết quả nên thấy** — con số ghi "(tất định)" hoặc "(đã đo)" là số chính xác đã kiểm chứng ngoài GPU (thống kê dữ liệu, số tham số, độ dài token, BM25). Các chỉ số mô hình sau khi train **phụ thuộc lượt chạy của bạn**, nên bài chỉ nêu dấu hiệu/kiểm tra hợp lý, không bịa số.
+- 📌 **Kết quả đã đo** — bảng số do chính đoạn code trong bài sinh ra trên dữ liệu thật (BM25 trên Zalo Legal, thống kê hiệu lực văn bản); chạy lại phải ra đúng như vậy.
+- 🎯 **Mục tiêu buổi học** + ✅ **Tiêu chí hoàn thành** ở đầu mỗi buổi — đạt tiêu chí mới sang buổi sau. 🧒 **Giải thích kiểu Feynman** mở đầu phần lý thuyết: một phút, không công thức.
+- 📊 **Trước → Sau** — ô `compare_runs` ở cuối mỗi buổi có thay đổi mô hình: so từng câu với mốc trước bằng cùng bộ chấm.
 - ⚠️ Lỗi hay gặp · 🧠 Điều cần ghi nhớ · 🎤 Hay bị hỏi khi phỏng vấn.
 
 ## Tài nguyên Hugging Face dùng trong lộ trình (đã kiểm tra tồn tại & giấy phép)
@@ -151,10 +176,12 @@ Bộ test kiểm tra cả **nội dung bài học**: mọi ô Python phải đú
 | Mọi buổi | `Qwen/Qwen3-1.7B` | Apache-2.0 |
 | Buổi 04+ | `unsloth/Qwen3-1.7B-unsloth-bnb-4bit` (tùy chọn) | Apache-2.0 |
 | Buổi 12 | `Qwen/Qwen3-Embedding-0.6B`, `Qwen/Qwen3-Reranker-0.6B`, `AITeamVN/Vietnamese_Embedding`, `Qdrant/Qwen3-Embedding-0.6B-onnx` | Xem model card |
-| Buổi 12 (bài tập) | `GreenNode/zalo-ai-legal-text-retrieval-vn` | MIT |
+| Buổi 12 (Khối 8) | `GreenNode/zalo-ai-legal-text-retrieval-vn` — 61.425 điều luật, 788 câu hỏi thật | MIT |
+| Buổi 12 (Khối 8) | `bkai-foundation-models/vietnamese-bi-encoder` (PhoBERT, cần tách từ; đã train trên Zalo 2021) | Apache-2.0 |
+| Buổi 01 (Ô 8b–8c) | `th1nhng0/vietnamese-legal-documents` — metadata hiệu lực 171.556 văn bản + quan hệ thay thế | CC-BY-4.0 |
 | Buổi 14 | `CohereLabs/Global-MMLU` (config `vi`) | Apache-2.0 |
 | Buổi 11 (bài tập) | `phamhai/Vietnamese-Function-Calling-Test` | Apache-2.0 |
-| Mở rộng | `duyet/vietnamese-legal-instruct`, `th1nhng0/vietnamese-legal-documents` | CC-BY-4.0 |
+| Mở rộng | `duyet/vietnamese-legal-instruct` (222 nghìn hội thoại hỏi–đáp pháp luật) | CC-BY-4.0 |
 
 ## Thời lượng & phần cứng
 ~59 giờ học (16 buổi × 3–4 giờ). Lượt train dài nhất: GRPO (Buổi 09) và biên dịch llama.cpp (Buổi 13). Tất cả chạy trên Colab T4 15 GB; nếu có GPU Ampere+ (L4/A100), đổi `fp16=True` thành `bf16=True`.
