@@ -54,7 +54,7 @@ KEEP_FIELDS = ("id", "so_ky_hieu", "title", "loai_van_ban", "ngay_ban_hanh", "ng
                "ngay_het_hieu_luc", "co_quan_ban_hanh", "pham_vi", "tinh_trang_hieu_luc")
 MANIFEST_FIELDS = ("id", "so_ky_hieu", "title", "loai_van_ban", "ngay_ban_hanh", "ngay_co_hieu_luc",
                    "ngay_het_hieu_luc", "tinh_trang_hieu_luc", "validity", "partially_expired", "status_conflict",
-                   "region", "co_quan_ban_hanh", "topics", "n_chars", "n_articles")
+                   "region", "co_quan_ban_hanh", "topics", "n_chars", "n_articles", "text_source")
 
 
 def nfc(s: str | None) -> str:
@@ -245,22 +245,30 @@ def chunks(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[dict]:
 # Chọn văn bản và đọc toàn văn từ parquet
 # ---------------------------------------------------------------------------
 
+def enrich(r: dict) -> dict | None:
+    """Metadata gốc → bản ghi văn bản của kho (chủ đề, hiệu lực, địa bàn); None nếu ngoài chủ đề."""
+    topics = topics_for_title(r.get("title"))
+    if not topics:
+        return None
+    doc = {k: (nfc(r.get(k)) if isinstance(r.get(k), str) else r.get(k)) for k in KEEP_FIELDS}
+    doc["id"] = str(doc["id"])
+    doc["topics"] = topics
+    doc["validity"] = validity(r.get("tinh_trang_hieu_luc"))
+    doc["partially_expired"] = nfc(r.get("tinh_trang_hieu_luc")) in PARTIAL
+    doc["status_conflict"] = status_conflict(r)
+    doc["region"] = region_of(r)
+    return doc
+
+
 def select_documents(rows: Iterable[dict]) -> list[dict]:
     """Lọc theo chủ đề, bỏ bản dịch, khử trùng (cùng số ký hiệu + tiêu đề → giữ 1, ưu tiên id số nhỏ hơn)."""
     seen: dict[tuple[str, str], dict] = {}
     for r in rows:
         if r.get("loai_van_ban") in EXCLUDED_TYPES:
             continue
-        topics = topics_for_title(r.get("title"))
-        if not topics:
+        doc = enrich(r)
+        if doc is None:
             continue
-        doc = {k: (nfc(r.get(k)) if isinstance(r.get(k), str) else r.get(k)) for k in KEEP_FIELDS}
-        doc["id"] = str(doc["id"])
-        doc["topics"] = topics
-        doc["validity"] = validity(r.get("tinh_trang_hieu_luc"))
-        doc["partially_expired"] = nfc(r.get("tinh_trang_hieu_luc")) in PARTIAL
-        doc["status_conflict"] = status_conflict(r)
-        doc["region"] = region_of(r)
         key = (nfc(r.get("so_ky_hieu")).strip(), nfc(r.get("title")).strip().lower())
         prev = seen.get(key)
         if prev is None or _id_order(doc["id"]) < _id_order(prev["id"]):
@@ -287,17 +295,35 @@ def iter_content(content_path: str | Path, wanted: set[str], batch_size: int = 2
                 yield str(i), html
 
 
-def build(raw: str | Path, out: str | Path) -> dict:
+def build(raw: str | Path, out: str | Path, supplements: str | Path | None = None) -> dict:
+    """Dựng kho từ parquet gốc, cộng thêm văn bản bổ sung tay (`supplements.csv`) nếu có."""
     import pyarrow.parquet as pq
+
+    from .supplements import load_supplements
 
     raw, out = Path(raw), Path(out)
     out.mkdir(parents=True, exist_ok=True)
     meta = pq.read_table(raw / "metadata.parquet", columns=list(KEEP_FIELDS)).to_pylist()
     docs = select_documents(meta)
+    for d in docs:
+        d["text_source"] = "vbpl_html"
     by_id = {d["id"]: d for d in docs}
     texts: dict[str, str] = {}
     for i, html in iter_content(raw / "content.parquet", set(by_id)):
         texts[i] = html_to_text(html)
+
+    # Văn bản bổ sung: bỏ qua nếu bộ gốc đã có cùng số ký hiệu (bản cổng ưu tiên hơn bản OCR).
+    known = {d["so_ky_hieu"].strip() for d in docs}
+    skipped = []
+    for m, text in load_supplements(supplements) if supplements else []:
+        d = enrich(m)
+        if d is None or d["so_ky_hieu"].strip() in known or d["id"] in by_id:
+            skipped.append(m["so_ky_hieu"])
+            continue
+        d["text_source"] = m["text_source"]
+        docs.append(d)
+        by_id[d["id"]] = d
+        texts[d["id"]] = text
 
     n_art = 0
     with open(out / "welfare_docs.jsonl", "w", encoding="utf-8") as fd, \
@@ -310,7 +336,8 @@ def build(raw: str | Path, out: str | Path) -> dict:
             fd.write(json.dumps({**d, "text": text}, ensure_ascii=False) + "\n")
             for a in arts:
                 fa.write(json.dumps({"doc_id": d["id"], "so_ky_hieu": d["so_ky_hieu"], "region": d["region"],
-                                     "validity": d["validity"], "topics": d["topics"], **a},
+                                     "validity": d["validity"], "topics": d["topics"],
+                                     "text_source": d["text_source"], **a},
                                     ensure_ascii=False) + "\n")
                 n_art += 1
     with open(out / "manifest.csv", "w", encoding="utf-8", newline="") as f:
@@ -319,6 +346,8 @@ def build(raw: str | Path, out: str | Path) -> dict:
         for d in docs:
             w.writerow({**d, "topics": ";".join(d["topics"]), "status_conflict": d["status_conflict"] or ""})
     stats = summarize(docs, n_art)
+    stats["supplements"] = sum(d["text_source"] != "vbpl_html" for d in docs)
+    stats["supplements_skipped"] = skipped
     (out / "stats.json").write_text(json.dumps(stats, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return stats
 
@@ -340,8 +369,10 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--raw", default="data/real/raw", help="thư mục chứa metadata.parquet và content.parquet")
     ap.add_argument("--out", default="data/real")
+    ap.add_argument("--supplements", default="data/real/supplements.csv",
+                    help="văn bản bổ sung tay; bỏ qua nếu file không tồn tại")
     a = ap.parse_args(argv)
-    print(json.dumps(build(a.raw, a.out), ensure_ascii=False, indent=1))
+    print(json.dumps(build(a.raw, a.out, a.supplements), ensure_ascii=False, indent=1))
 
 
 if __name__ == "__main__":
