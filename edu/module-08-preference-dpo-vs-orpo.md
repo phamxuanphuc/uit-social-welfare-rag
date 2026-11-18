@@ -75,12 +75,12 @@ tok = load_tokenizer()
 ```python
 policy = load_model(adapter=START)
 K = 4
-def sample_k(rows, seed):
+def sample_k(model, rows, seed):
     prompts = [render_prompt(tok, r) for r in rows for _ in range(K)]
-    outs = generate(policy, tok, prompts, batch_size=16, do_sample=True, temperature=0.9, top_p=0.95, seed=seed)
+    outs = generate(model, tok, prompts, batch_size=16, do_sample=True, temperature=0.9, top_p=0.95, seed=seed)
     return [outs[i * K:(i + 1) * K] for i in range(len(rows))]
 t0 = time.perf_counter()
-samples_train, samples_val = sample_k(train, 1), sample_k(val, 2)
+samples_train, samples_val = sample_k(policy, train, 1), sample_k(policy, val, 2)
 print(f"Sinh {K * (len(train) + len(val))} mẫu trong {(time.perf_counter() - t0) / 60:.1f} phút")
 json.dump({"train": samples_train, "val": samples_val}, open(f"{os.environ['P01_RUNS']}/m08_samples.json", "w"), ensure_ascii=False)
 ```
