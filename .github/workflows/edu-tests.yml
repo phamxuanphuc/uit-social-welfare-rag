@@ -1,0 +1,36 @@
+# Cổng kiểm thử cho lộ trình edu/: chạy toàn bộ test p01kit + lint bài học trên CPU.
+# Đây cũng là ví dụ "chặn merge bằng test" mà Buổi 15 nhắc tới.
+name: edu-tests
+
+on:
+  push:
+    branches: [main]
+    paths: ["edu/**", ".github/workflows/edu-tests.yml"]
+  pull_request:
+    paths: ["edu/**", ".github/workflows/edu-tests.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: edu-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"   # cùng phiên bản với container deploy (ADR 0001)
+          cache: pip
+          cache-dependency-path: edu/requirements-dev.txt
+      - name: Install CPU-only torch, then dev requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -r edu/requirements-dev.txt
+      - name: Run tests
+        run: python -m pytest edu/tests -q
