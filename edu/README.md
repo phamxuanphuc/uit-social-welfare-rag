@@ -47,16 +47,19 @@ Mỗi buổi **nạp base sạch + adapter cụ thể** (`p01kit.modeling.load_m
 ## Khởi động Colab (đầu mỗi buổi)
 **Lần đầu mỗi runtime** — clone repo, cài đúng phiên bản đã ghim ([requirements-colab.txt](requirements-colab.txt)), khởi động lại:
 ```python
-import os, subprocess
-REPO = "/content/uit-social-welfare-rag"
+import os, subprocess, base64
+REPO, URL = "/content/uit-social-welfare-rag", "https://github.com/phamxuanphuc/uit-social-welfare-rag.git"
 if not os.path.exists(REPO):
-    try:
+    env = dict(os.environ)
+    try:  # repo private: thêm GITHUB_TOKEN vào Colab Secrets (🔑); repo public thì bỏ qua
         from google.colab import userdata
-        token = userdata.get("GITHUB_TOKEN")   # repo private: thêm token vào Colab Secrets (🔑)
+        basic = base64.b64encode(f"x-access-token:{userdata.get('GITHUB_TOKEN')}".encode()).decode()
+        env |= {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "http.extraHeader",
+                "GIT_CONFIG_VALUE_0": f"Authorization: Basic {basic}"}  # token chỉ nằm trong biến môi trường
     except Exception:
-        token = None
-    auth = f"{token}@" if token else ""
-    subprocess.run(["git", "clone", "--depth", "1", f"https://{auth}github.com/phamxuanphuc/uit-social-welfare-rag.git", REPO], check=True)
+        pass
+    r = subprocess.run(["git", "clone", "--depth", "1", URL, REPO], env=env, capture_output=True, text=True)
+    assert r.returncode == 0, f"git clone lỗi:\n{r.stderr}"
 ```
 ```bash
 !pip install -q -r /content/uit-social-welfare-rag/edu/requirements-colab.txt

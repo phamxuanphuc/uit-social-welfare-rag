@@ -66,16 +66,19 @@
 ### Ô 0a — Cài thư viện (chạy 1 lần cho mỗi runtime)
 **Mục tiêu:** đưa code + dữ liệu đồ án vào Colab và cài **đúng phiên bản đã ghim**.
 ```python
-import os, subprocess
-REPO = "/content/uit-social-welfare-rag"
+import os, subprocess, base64
+REPO, URL = "/content/uit-social-welfare-rag", "https://github.com/phamxuanphuc/uit-social-welfare-rag.git"
 if not os.path.exists(REPO):
-    try:
+    env = dict(os.environ)
+    try:  # repo private: thêm GITHUB_TOKEN vào Colab Secrets (🔑); repo public thì bỏ qua
         from google.colab import userdata
-        token = userdata.get("GITHUB_TOKEN")  # repo private: thêm token vào Colab Secrets (biểu tượng 🔑)
+        basic = base64.b64encode(f"x-access-token:{userdata.get('GITHUB_TOKEN')}".encode()).decode()
+        env |= {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "http.extraHeader",
+                "GIT_CONFIG_VALUE_0": f"Authorization: Basic {basic}"}  # token chỉ nằm trong biến môi trường
     except Exception:
-        token = None
-    auth = f"{token}@" if token else ""
-    subprocess.run(["git", "clone", "--depth", "1", f"https://{auth}github.com/phamxuanphuc/uit-social-welfare-rag.git", REPO], check=True)
+        pass
+    r = subprocess.run(["git", "clone", "--depth", "1", URL, REPO], env=env, capture_output=True, text=True)
+    assert r.returncode == 0, f"git clone lỗi:\n{r.stderr}"
 ```
 ```bash
 !pip install -q -r /content/uit-social-welfare-rag/edu/requirements-colab.txt
@@ -83,7 +86,7 @@ if not os.path.exists(REPO):
 ```python
 import os; os.kill(os.getpid(), 9)  # khởi động lại runtime để nạp thư viện mới (Colab sẽ tự kết nối lại)
 ```
-- **Giải thích:** token lấy từ *Colab Secrets* nên **không bao giờ xuất hiện trong notebook** (không lộ khi chia sẻ). Ghim phiên bản (`transformers==5.17.0`, `trl==1.15.0`...) để notebook chạy lại được sau 6 tháng — các thư viện này đổi tên tham số rất nhanh (ví dụ `warmup_ratio` đã bị bỏ ở transformers 5).
+- **Giải thích:** token lấy từ *Colab Secrets* nên **không bao giờ xuất hiện trong notebook** (không lộ khi chia sẻ). Token được đưa cho `git` qua **biến môi trường** (header `Authorization`), **không ghép vào URL**: nếu ghép vào URL, khi clone lỗi thì thông báo `CalledProcessError` sẽ in nguyên URL chứa token ra output của ô, và token còn bị lưu lại trong `.git/config`. Ghim phiên bản (`transformers==5.17.0`, `trl==1.15.0`...) để notebook chạy lại được sau 6 tháng — các thư viện này đổi tên tham số rất nhanh (ví dụ `warmup_ratio` đã bị bỏ ở transformers 5).
 - ⚠️ **Lỗi hay gặp:** quên khởi động lại runtime → `import` vẫn dùng bản `transformers` cũ có sẵn trên Colab, sinh lỗi khó hiểu ở các buổi sau.
 
 ### Ô 0b — Khởi động phiên (chạy đầu MỖI buổi)

@@ -71,6 +71,16 @@ def test_required_sections(path):
     assert text.count("**Q:") >= 5, f"{path.name} cần ít nhất 5 câu hỏi phỏng vấn"
 
 
+@pytest.mark.parametrize("path", MODULES + [EDU / "README.md"], ids=lambda p: p.name)
+def test_no_credentials_in_urls(path):
+    """Token ghép vào URL (`https://{token}@github.com/...`) bị in ra khi lệnh lỗi và lưu trong .git/config."""
+    for lang in ("python", "bash"):
+        for code in blocks(path, lang):
+            # `https://{auth}github.com` (biến chứa "token@") hoặc `https://{user}:{token}@host`
+            assert not re.search(r"https?://(\{|[^\s/\"']*\{[^}]*\}[^\s/\"']*@)", code), \
+                f"{path.name}: không ghép token/biến vào URL — truyền qua biến môi trường của git"
+
+
 @pytest.mark.parametrize("path", MODULES, ids=lambda p: p.name)
 def test_p01kit_imports_exist(path):
     """Mọi `from p01kit.x import a, b` trong bài học phải trỏ tới tên có thật."""
