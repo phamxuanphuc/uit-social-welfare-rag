@@ -1,6 +1,6 @@
 # 0003. RAFT + DoRA/rsLoRA/NEFTune + ORPO/GRPO & imatrix GGUF Pipeline
 
-- **Status:** accepted
+- **Status:** superseded by [ADR 0004](0004-evidence-driven-finetune-pipeline.md)
 
 Để mô hình `Qwen/Qwen3-1.7B` vừa bám sát ngữ cảnh tiếng Việt, vừa biết từ chối khi thiếu căn cứ và không bỏ sót cảnh báo văn bản hết hiệu lực (`expired`) trên GPU miễn phí Google Colab T4 (15 GB VRAM), chúng tôi chốt pipeline huấn luyện 2 giai đoạn kết hợp lượng tử hóa bảo toàn độ chính xác:
 
