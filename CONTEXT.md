@@ -57,13 +57,13 @@ Rủi ro còn lại bắt buộc công bố cho **InformalWorker** rằng kết 
 _Avoid_: Miễn trừ chung
 
 **ReleaseDossier**:
-Hồ sơ một lần phát hành ghi nhận `dataset_version`, `model_version`, `decision_threshold` và kết quả kiểm thử 4 mốc.
+Hồ sơ một lần phát hành ghi nhận `dataset_version`, `model_version`, `decision_threshold` và kết quả kiểm thử 5 mốc.
 _Avoid_: Changelog
 
 ## Governance Roles (`GOVERN`)
 
 - **Data Steward**: Quản lý kho **PolicyDocument**, cấu trúc metadata, **ColloquialMapping** và kiểm soát chia tập không rò rỉ dữ liệu.
-- **Evaluation & QA Lead**: Chạy kiểm thử **ReleaseDossier** qua 4 mốc, đo độ ổn định 3 lần chạy và theo dõi cảnh báo Data/Concept Drift.
+- **Evaluation & QA Lead**: Chạy kiểm thử **ReleaseDossier** qua 5 mốc, đo độ ổn định 3 seed ghép cặp và theo dõi cảnh báo Data/Concept Drift.
 - **Policy Approver & Safety Officer**: Duyệt đổi **ValidityStatus** tạo **ApprovalAudit**, xác minh ca `expired` và nắm quyền kích hoạt **KillSwitch**.
 
 ## Relationships
@@ -84,3 +84,5 @@ _Avoid_: Changelog
 - "Cập nhật trạng thái văn bản" tránh ghi đè file seed `data/mock_policies.json` — đã chốt: lưu biến động vào DB (**ApprovalAudit**) và đồng bộ RAM/Qdrant.
 - "Chia tập RAFT" tránh rò rỉ dữ liệu biến thể câu hỏi giữa Train và Test — đã chốt: chia `80/10/10` theo nhóm kịch bản gốc (`Scenario-Group Split`).
 - "Che PII có dấu cách/chấm" tránh che nhầm số tiền hay tổng đài — đã chốt: Regex bắt CCCD (9–12 số) và SĐT di động kể cả khi viết cách bằng khoảng trắng/chấm/gạch ngang, không đụng số tiền và hotline công khai; không dùng LLM bên thứ 3 và hỗ trợ xóa theo `trace_id` / TTL 30 ngày.
+- "Bật DoRA + rsLoRA + NEFTune cùng lúc" không cho biết kỹ thuật nào có ích — đã chốt: LoRA thường gắn mọi lớp làm cấu hình gốc; mỗi kỹ thuật là một ablation và chỉ giữ khi thắng 3 seed ghép cặp trên val ([ADR 0004](docs/adr/0004-evidence-driven-finetune-pipeline.md)).
+- "ORPO sau SFT" trùng vai trò (ORPO đã gồm SFT) — đã chốt: `SFT → DPO` là đường chính, ORPO chỉ chạy một giai đoạn từ base làm ablation.
