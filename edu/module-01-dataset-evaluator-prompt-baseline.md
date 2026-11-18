@@ -204,7 +204,7 @@ for d, o in het[["doc_id", "other_doc_id"]].astype(str).drop_duplicates().itertu
 import p01kit
 from p01kit.modeling import load_model, load_tokenizer, vram_gb
 tok = load_tokenizer()
-model = load_model()          # base sạch, 4-bit NF4 — giống Ô 6 Buổi 00
+model = load_model()          # base sạch, 4-bit NF4 — giống Ô 4 Buổi 00
 print(vram_gb())
 ```
 - **Giải thích:** từ buổi này ta dùng hàm nạp chuẩn để mọi buổi nạp mô hình **giống hệt nhau** (tránh lệch cấu hình ngầm).

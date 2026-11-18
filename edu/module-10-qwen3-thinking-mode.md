@@ -44,7 +44,7 @@ Bản 1.7B nhận năng lực này qua **chưng cất (distillation)** từ mô 
 | `enable_thinking=True` (mặc định) | Prompt dừng ở `<|im_start|>assistant\n` → mô hình tự mở `<think>` |
 | `/think`, `/no_think` trong tin nhắn user | Công tắc mềm theo từng lượt (khi `enable_thinking=True`) |
 
-Ở lượt hội thoại **cũ**, template **xóa nội dung think** của assistant khỏi lịch sử → suy luận không chiếm ngữ cảnh các lượt sau (đã thấy ở Buổi 00, Ô 4).
+Ở lượt hội thoại **cũ**, template **xóa nội dung think** của assistant khỏi lịch sử → suy luận không chiếm ngữ cảnh các lượt sau (cách chat template bọc từng tin nhắn: xem lại Buổi 00, Ô 8).
 
 ### 1.3. Giữ năng lực thinking khi fine-tune
 - Nguyên tắc: **dữ liệu train phải có cả hai chế độ**, như giai đoạn 3 ở trên. Hướng dẫn thực hành của Unsloth cho Qwen3 gợi ý trộn phần lớn mẫu có suy luận với một phần mẫu không suy luận; tỉ lệ cụ thể là **siêu tham số** — buổi này dùng 50/50 và để bạn thử tỉ lệ khác.
