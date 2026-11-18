@@ -161,6 +161,34 @@ for k, (v, ok) in gate(s0).items():
 - **Giải thích:** lưu output thô giúp bạn **chấm lại miễn phí** mỗi khi sửa bộ chấm — không phải sinh lại.
 - 📌 **Kết quả nên thấy:** đúng các số của Buổi 00; phần lớn ngưỡng còn ❌.
 
+### Ô 8b (8 dòng) — 🇻🇳 Dữ liệu thật: văn bản pháp luật Việt Nam hết hiệu lực nhiều đến đâu?
+**Mục tiêu:** trả lời bằng số thật câu hỏi "vì sao P01 phải có `expired_warning`?" — dùng metadata 171.556 văn bản từ [`th1nhng0/vietnamese-legal-documents`](https://huggingface.co/datasets/th1nhng0/vietnamese-legal-documents) (CC-BY-4.0, ~15 MB, chạy trên CPU).
+```python
+import pandas as pd
+from huggingface_hub import hf_hub_download
+VB = "th1nhng0/vietnamese-legal-documents"
+meta = pd.read_parquet(hf_hub_download(VB, "data/metadata.parquet", repo_type="dataset"),
+                       columns=["id", "title", "so_ky_hieu", "loai_van_ban", "ngay_co_hieu_luc", "ngay_het_hieu_luc", "tinh_trang_hieu_luc"])
+print(len(meta), "văn bản")
+print(meta["tinh_trang_hieu_luc"].value_counts(normalize=True).round(3).head(4).to_dict())
+print("Riêng Luật:", meta.loc[meta["loai_van_ban"] == "Luật", "tinh_trang_hieu_luc"].value_counts().to_dict())
+```
+- 📌 **Kết quả đã đo:** `171556 văn bản`; **52,9% "Hết hiệu lực toàn bộ"**, 41,7% "Còn hiệu lực", 3,1% "Hết hiệu lực một phần", 1,9% "Chưa xác định". Riêng 610 Luật: 271 hết hiệu lực toàn bộ, 154 hết một phần, 179 còn hiệu lực, 6 chưa có hiệu lực.
+- 🧒 **Feynman:** kho luật giống một thư viện mà **hơn nửa số sách đã bị thay bằng bản mới** nhưng vẫn nằm trên kệ. Người tra cứu lấy nhầm sách cũ là chuyện rất dễ xảy ra — vì vậy P01 không xóa văn bản hết hạn mà **gắn nhãn đỏ** (`expired_warning`).
+
+### Ô 8c (9 dòng) — Chuỗi thay thế Luật Bảo hiểm xã hội & đừng tin metadata mù quáng
+```python
+rel = pd.read_parquet(hf_hub_download(VB, "data/relationships.parquet", repo_type="dataset"))
+title = dict(zip(meta["id"].astype(str), meta["title"]))
+bhxh = meta[(meta["loai_van_ban"] == "Luật") & meta["title"].str.contains("Bảo hiểm xã hội", case=False, na=False)]
+print(bhxh[["so_ky_hieu", "ngay_co_hieu_luc", "ngay_het_hieu_luc", "tinh_trang_hieu_luc"]].to_string(index=False))
+het = rel[(rel["relationship"] == "Văn bản quy định hết hiệu lực") & rel["doc_id"].astype(str).isin(set(bhxh["id"].astype(str)))]
+for d, o in het[["doc_id", "other_doc_id"]].astype(str).drop_duplicates().itertuples(index=False):
+    print(f"{title.get(d)}  →  hết hiệu lực do  →  {title.get(o)}")
+```
+- 📌 **Kết quả đã đo:** 3 luật BHXH nối tiếp nhau: **71/2006/QH11** (01/01/2007 → 01/01/2016) → **58/2014/QH13** (01/01/2016 → 01/07/2025) → **41/2024/QH15** (từ 01/07/2025). Đây đúng là tình huống `expired` + "đã có văn bản mới thay thế" mà bộ dữ liệu P01 mô phỏng.
+- ⚠️ **Dữ liệu cào tự động có lỗi — và bạn phải bắt được.** Cũng bộ dữ liệu này ghi Luật 41/2024/QH15 là *"Hết hiệu lực toàn bộ"* từ 01/01/2026 do Luật Việc làm 74/2025/QH15, và ghi Luật 71/2006 hết hiệu lực do một **Nghị định** (23/2021/NĐ-CP). Cả hai rất đáng ngờ: một nghị định đứng **dưới** luật trong thứ bậc văn bản nên không thể làm một luật hết hiệu lực, và một luật việc làm khó có thể bãi bỏ toàn bộ luật BHXH vừa có hiệu lực 6 tháng (nhiều khả năng là "hết hiệu lực **một phần**"). Trước khi dùng nhãn hiệu lực để huấn luyện hay trả lời người dân, **đối chiếu nguồn chính thức** (Cơ sở dữ liệu quốc gia về văn bản pháp luật, Công báo). Đó là lý do P01 bắt **cán bộ phê duyệt** mọi thay đổi trạng thái hiệu lực (`ApprovalAudit`) thay vì tin nhãn tự động.
+
 ### Ô 9 (7 dòng) — Nạp mô hình (chuẩn hóa bằng `p01kit.modeling`)
 ```python
 import p01kit
