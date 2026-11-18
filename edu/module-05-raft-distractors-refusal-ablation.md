@@ -95,7 +95,7 @@ def train_sft(name, rows, module="m05", max_steps=51, lr=2e-4, neftune=None, eva
     FastLanguageModel.for_inference(model)
     res = evaluate(model, tok, test, batch_size=8)
     scoreboard.record(module.upper(), name, res["summary"], latency_s=res["summary"]["sec_per_row"],
-                      notes=f"n_train={len(rows)} steps={max_steps} {minutes:.1f}min")
+                      notes=f"n_train={len(rows)} steps={max_steps} {minutes:.1f}min", outputs=res["outputs"])
     del model, tr; free()
     return res
 ```
@@ -181,6 +181,15 @@ for k, r in results.items():
 ---
 
 ## 3. So sánh hiệu quả
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M05", "A_oracle_only"), ("M05", "C_raft_30"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** RAFT phải làm giảm `le_ra_tu_choi` và câu `❌` bịa mã văn bản, có thể đổi lại vài câu `tu_choi_nham`. Đọc các ví dụ bị làm hỏng: mô hình có từ chối quá tay không?
+
 
 | Cấu hình | n train | answer_acc | refusal_acc | expired_recall | Chọn nhầm nhiễu | Bịa | Từ chối thiếu | Từ chối thừa | p vs C |
 |---|---|---|---|---|---|---|---|---|---|

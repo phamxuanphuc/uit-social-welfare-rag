@@ -186,7 +186,8 @@ from p01kit import scoreboard
 model.eval(); model.config.use_cache = True     # bật lại KV-cache (đã tắt khi train với checkpointing)
 res2 = evaluate(model, tok, test, batch_size=8, max_new_tokens=p01kit.MAX_NEW_TOKENS)
 print(format_summary(res2["summary"]))
-scoreboard.record("M02", "sft-lora-r16", res2["summary"], latency_s=res2["summary"]["sec_per_row"], notes=f"{train_min:.1f} min")
+scoreboard.record("M02", "sft-lora-r16", res2["summary"], latency_s=res2["summary"]["sec_per_row"], notes=f"{train_min:.1f} min",
+                  outputs=res2["outputs"])
 ```
 - 📌 **Kiểm tra hợp lý:** `json_valid` và `schema_ok` nên **gần 1,0**. Nếu < 0,95 → nghi ngờ thiếu `<|im_end|>` hoặc masking sai. `use_cache=True` rất quan trọng: quên bật thì sinh chậm hơn nhiều lần.
 
@@ -226,6 +227,15 @@ print("Khớp 16 output đầu:", chk["outputs"] == res2["outputs"][:16])
 ---
 
 ## 3. So sánh hiệu quả
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M00", "base-zero-shot"), ("M02", "sft-lora-r16"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** Đây là **lần fine-tune đầu tiên** của bạn. Kỳ vọng hợp lý: `json_valid` gần 1,0 và nhóm lỗi `❌ no_json`/`le_ra_tu_choi` giảm mạnh; nếu `làm hỏng` > 10 câu, xem lại masking (Ô 3) trước khi kết luận.
+
 
 ```python
 scoreboard.show()

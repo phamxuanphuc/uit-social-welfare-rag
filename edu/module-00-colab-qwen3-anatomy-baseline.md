@@ -265,7 +265,7 @@ from p01kit import scoreboard
 res0 = evaluate(model, tok, test, batch_size=8, max_new_tokens=p01kit.MAX_NEW_TOKENS)
 print(format_summary(res0["summary"]))
 print("Thời gian:", res0["summary"]["seconds"], "giây")
-scoreboard.record("M00", "base-zero-shot", res0["summary"], latency_s=res0["summary"]["sec_per_row"])
+scoreboard.record("M00", "base-zero-shot", res0["summary"], latency_s=res0["summary"]["sec_per_row"], outputs=res0["outputs"])
 ```
 - **Giải thích:** `evaluate()` = `render_prompt` (prompt chuẩn P01) → `generate` theo lô (greedy) → `score_one` từng câu → `summarize` kèm **khoảng tin cậy 95% bootstrap**.
 - 📌 **Kết quả nên thấy:** một bảng 8 chỉ số kèm `95%CI` và `n`. Kiểm tra hợp lý: `json_valid` phải > 0 (nếu bằng 0, kiểm tra lại `enable_thinking=False` và `max_new_tokens`). Đừng ngạc nhiên nếu `expired_recall` và `refusal_acc` thấp — đó là lý do ta fine-tune.

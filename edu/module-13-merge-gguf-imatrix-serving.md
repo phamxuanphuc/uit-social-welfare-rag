@@ -158,7 +158,7 @@ def eval_gguf(name, schema=True, slots=4):
         finally:
             proc.terminate(); proc.wait()
         s = summarize([score_one(o, r) for o, r in zip(outs, test)])
-        scoreboard.record("M13", f"gguf-{name}{'' if schema else '-noschema'}", s)
+        scoreboard.record("M13", f"gguf-{name}{'' if schema else '-noschema'}", s, outputs=outs)
         return s
     return once("m13", f"eval_{name}{'' if schema else '_noschema'}", run)   # bị ngắt → biến thể đã chấm được bỏ qua
 
@@ -213,6 +213,15 @@ print(sorted(os.listdir(dst)))
 ---
 
 ## 3. So sánh hiệu quả
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M09", "grpo"), ("M13", "gguf-Q4_K_M-imat"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** Cùng mô hình, chỉ khác **lượng tử hóa + JSON Schema**: câu bị làm hỏng là cái giá của Q4. Đổi bản *sau* thành `("M13", "gguf-Q3_K_M")` để thấy cái giá tăng khi xuống 3 bit.
+
 
 | Biến thể | MB | json_valid | schema_ok | answer_acc | strict_acc | expired_recall |
 |---|---|---|---|---|---|---|

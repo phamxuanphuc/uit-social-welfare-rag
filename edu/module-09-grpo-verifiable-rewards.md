@@ -150,7 +150,8 @@ from p01kit.stats import mcnemar_exact
 from p01kit import scoreboard
 FastLanguageModel.for_inference(model)
 res_g = evaluate(model, tok, test, batch_size=8)
-scoreboard.record("M09", "grpo", res_g["summary"], latency_s=res_g["summary"]["sec_per_row"], notes=f"start={START.name} {grpo_min:.0f}min")
+scoreboard.record("M09", "grpo", res_g["summary"], latency_s=res_g["summary"]["sec_per_row"], notes=f"start={START.name} {grpo_min:.0f}min",
+                  outputs=res_g["outputs"])
 del model, trainer; free()
 m0, t0k = FastLanguageModel.from_pretrained(str(START), max_seq_length=p01kit.MAX_SEQ_LEN, load_in_4bit=True)
 FastLanguageModel.for_inference(m0)
@@ -174,6 +175,15 @@ print("Độ dài verification_reasoning trung bình:", sum(reason_len) / len(re
 ---
 
 ## 3. So sánh hiệu quả
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M08", "sft_dpo"), ("M09", "grpo"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** Nếu `START` của bạn là `sft_best`, đổi bản *trước* thành `("M06", "sft_best")`. Mục tiêu nghiệp vụ là nhóm lỗi `khong_canh_bao_het_han` về 0 mà `false_expired_rate` không tăng — đọc ví dụ bị làm hỏng để bắt reward hacking.
+
 
 | Chỉ số | Mô hình khởi đầu | Sau GRPO | Ghi chú |
 |---|---|---|---|

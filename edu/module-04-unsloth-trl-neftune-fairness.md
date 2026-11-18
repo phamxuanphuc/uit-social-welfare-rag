@@ -144,7 +144,8 @@ from p01kit import scoreboard
 FastLanguageModel.for_inference(model)
 resA = evaluate(model, tok, test, batch_size=8)
 print(format_summary(resA["summary"]))
-scoreboard.record("M04", "unsloth-sft", resA["summary"], latency_s=resA["summary"]["sec_per_row"], notes=f"{minutes:.1f}min peak{peak}GB")
+scoreboard.record("M04", "unsloth-sft", resA["summary"], latency_s=resA["summary"]["sec_per_row"], notes=f"{minutes:.1f}min peak{peak}GB",
+                  outputs=resA["outputs"])
 ```
 
 ### Ô 8 (9 dòng) — Train C (NEFTune α=5) trên base SẠCH
@@ -157,7 +158,7 @@ trainer = SFTTrainer(model=model, processing_class=tok, train_dataset=ds_train, 
 trainer.train()
 model.save_pretrained(adapter_path("m04", "unsloth_neft5")); FastLanguageModel.for_inference(model)
 resC = evaluate(model, tok, test, batch_size=8)
-scoreboard.record("M04", "unsloth-neft5", resC["summary"], latency_s=resC["summary"]["sec_per_row"])
+scoreboard.record("M04", "unsloth-neft5", resC["summary"], latency_s=resC["summary"]["sec_per_row"], outputs=resC["outputs"])
 ```
 
 ### Ô 9 (10 dòng) — Bộ mở rộng truy vấn đời thường (`ColloquialMapping`)
@@ -200,6 +201,15 @@ for name, r in [("NEFTune", resC), ("Map", resB), ("Cả hai", resD)]:
 ---
 
 ## 3. So sánh hiệu quả
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M02", "sft-lora-r16"), ("M04", "unsloth-sft"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** Cùng siêu tham số, khác framework → chỉ số **phải gần như nhau** (p lớn). Nếu lệch nhiều, nghi lỗi template/masking của TRL (Ô 5). Sau đó so `("M04", "unsloth-sft")` với `("M04", "unsloth-neft5")` để thấy NEFTune đổi gì ở lát `style=colloquial`.
+
 
 **Bảng tốc độ (cùng 51 bước, cùng dữ liệu):**
 | Pipeline | s/bước | Phút train | VRAM đỉnh | answer_acc | strict_acc |

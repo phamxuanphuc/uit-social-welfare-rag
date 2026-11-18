@@ -152,7 +152,8 @@ tr.train()
 model.save_pretrained(adapter_path("m07", "sft_aug")); tok.save_pretrained(adapter_path("m07", "sft_aug"))
 FastLanguageModel.for_inference(model)
 res = evaluate(model, tok, test, batch_size=8)
-scoreboard.record("M07", "sft_aug", res["summary"], latency_s=res["summary"]["sec_per_row"], notes=f"n={len(train_aug)} steps={tr.state.global_step}")
+scoreboard.record("M07", "sft_aug", res["summary"], latency_s=res["summary"]["sec_per_row"], notes=f"n={len(train_aug)} steps={tr.state.global_step}",
+                  outputs=res["outputs"])
 ```
 
 ### Khối 7 — So với `sft_best`: lợi ở đâu, mất ở đâu?
@@ -176,6 +177,15 @@ print("fairness_gap:", res["summary"]["fairness_gap"])
 ---
 
 ## 3. So sánh hiệu quả
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M06", "sft_best"), ("M07", "sft_aug"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** Dữ liệu tổng hợp nhắm vào câu đời thường → nhìn lát `style=colloquial` và `fairness_gap` trước tiên. Không cải thiện có ý nghĩa → giữ `sft_best` (dữ liệu thêm cũng là chi phí bảo trì).
+
 
 **Phễu dữ liệu (điền số của bạn):**
 | Tầng | Số câu | Tỉ lệ giữ |

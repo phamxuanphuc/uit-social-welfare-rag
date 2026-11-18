@@ -84,7 +84,7 @@ for k in keys:
 ### Khối 3 — Bọc guardrail 4 tầng & so sánh trước/sau
 ```python
 from p01kit.guardrails import check_input, enforce_metadata, audit_record
-guarded_scores, audit = [], []
+guarded_scores, guarded_out, audit = [], [], []
 for out, r in zip(greedy["outputs"], test):
     gate_in = check_input(r["region"], r["question"], corpus)
     if gate_in["blocked"]:
@@ -94,12 +94,13 @@ for out, r in zip(greedy["outputs"], test):
     audit.append(audit_record(r["region"], r["question"], final))
     clean = {k: final.get(k) for k in ("verification_reasoning", "is_refusal", "expired_warning", "doc_code",
                                        "article", "benefit", "required_documents", "submission_place")}
-    guarded_scores.append(score_one(json.dumps(clean, ensure_ascii=False), r))
+    guarded_out.append(json.dumps(clean, ensure_ascii=False))
+    guarded_scores.append(score_one(guarded_out[-1], r))
 s_guard = summarize(guarded_scores)
 for k in ("refusal_acc", "citation_precision", "expired_recall", "false_expired_rate", "strict_acc"):
     print(f"{k:<20} mô hình={greedy['summary'][k]}  → có guardrail={s_guard[k]}")
 print("Override:", {o: sum(a['override'] == o for a in audit) for o in {a['override'] for a in audit}})
-scoreboard.record("M14", "final+guardrail", s_guard)
+scoreboard.record("M14", "final+guardrail", s_guard, outputs=guarded_out)
 ```
 - 📌 **Kết quả nên thấy:** `expired_recall` sau guardrail = **1,0** với mọi câu mô hình chọn đúng văn bản; `strict_acc` tăng vì giấy tờ/nơi nộp được khóa từ metadata. Đếm số lần override theo loại — đó là "bản đồ" mô hình còn sai ở đâu.
 

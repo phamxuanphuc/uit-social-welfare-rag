@@ -81,7 +81,7 @@ def run_both_modes(model, tok, label, rows=test):
         r = evaluate(model, tok, rows, enable_thinking=think, batch_size=4 if think else 8,
                      max_new_tokens=1024 if think else p01kit.MAX_NEW_TOKENS)
         s = r["summary"]; s.update(think_stats(r["outputs"], tok))
-        scoreboard.record("M10", f"{label}-{'think' if think else 'nothink'}", s, latency_s=s["sec_per_row"])
+        scoreboard.record("M10", f"{label}-{'think' if think else 'nothink'}", s, latency_s=s["sec_per_row"], outputs=r["outputs"])
         out[think] = r
         print(f"{label:<14} think={think!s:<5} answer={s['answer_acc']:.3f} unseen={s['acc_unseen_doc']} "
               f"expired={s['expired_recall']} sec/câu={s['sec_per_row']} {think_stats(r['outputs'], tok)}")
@@ -162,6 +162,15 @@ print(f"Định tuyến: bật thinking cho {sum(route)}/100 câu | answer_acc={
 ---
 
 ## 3. So sánh hiệu quả
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M10", "sft_best-nothink"), ("M10", "mixed_think-think"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** So mô hình non-thinking tốt nhất với mô hình trộn 2 chế độ khi bật thinking: cải thiện (nếu có) thường ở `slice=unseen_doc`; nhớ cân với số token và độ trễ ở bảng phía trên.
+
 
 | Mô hình · chế độ | % có suy luận | Token suy luận TB | s/câu | answer_acc | acc_unseen_doc | expired_recall |
 |---|---|---|---|---|---|---|

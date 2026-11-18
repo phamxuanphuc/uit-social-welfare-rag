@@ -190,7 +190,8 @@ results = {}
 for name, fs in [("2-shot", shots2), ("3-shot", shots3)]:
     results[name] = evaluate(model, tok, test, fewshot=fs, batch_size=4, max_new_tokens=p01kit.MAX_NEW_TOKENS)
     print(f"\n### {name}\n" + format_summary(results[name]["summary"]))
-    scoreboard.record("M01", f"base-{name}", results[name]["summary"], latency_s=results[name]["summary"]["sec_per_row"])
+    scoreboard.record("M01", f"base-{name}", results[name]["summary"], latency_s=results[name]["summary"]["sec_per_row"],
+                      outputs=results[name]["outputs"])
 ```
 - **Giải thích:** `batch_size=4` vì prompt dài gấp 3–4 lần → KV-cache lớn hơn; batch 8 có thể hết VRAM.
 - 📌 **Kết quả nên thấy:** `json_valid`/`schema_ok` thường **tăng rõ** so với zero-shot (mô hình bắt chước định dạng ví dụ); `expired_recall` và `refusal_acc` thường cải thiện ít hơn — luật nghiệp vụ khó học qua 2–3 ví dụ.
@@ -214,6 +215,15 @@ scoreboard.show()
 ---
 
 ## 3. So sánh hiệu quả — Ma trận quyết định Prompt vs RAG vs Fine-tune
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M00", "base-zero-shot"), ("M01", "base-3-shot"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** Few-shot chỉ đổi **prompt**, không đổi trọng số: thường sửa được lỗi định dạng (`json_valid`) nhưng ít sửa lỗi nghiệp vụ (`le_ra_tu_choi`, `khong_canh_bao_het_han`) — đó là lý do cần fine-tune ở Buổi 02.
+
 
 | Giải pháp | Khi nào đủ? | Chi phí | Điểm yếu với P01 |
 |---|---|---|---|

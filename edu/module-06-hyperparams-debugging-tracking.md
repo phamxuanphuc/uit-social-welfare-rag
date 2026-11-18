@@ -202,7 +202,8 @@ model.save_pretrained(adapter_path("m06", "sft_best")); tok.save_pretrained(adap
 json.dump({"lr": lr, "epochs": BEST_EPOCHS, "sweep": sweep}, open(adapter_path("m06", "sft_best") / "selection.json", "w"), indent=2)
 FastLanguageModel.for_inference(model)
 res = evaluate(model, tok, test, batch_size=8)
-scoreboard.record("M06", "sft_best", res["summary"], latency_s=res["summary"]["sec_per_row"], notes=f"lr={lr} ep={BEST_EPOCHS}")
+scoreboard.record("M06", "sft_best", res["summary"], latency_s=res["summary"]["sec_per_row"], notes=f"lr={lr} ep={BEST_EPOCHS}",
+                  outputs=res["outputs"])
 json.dump(res["outputs"], open(f"{os.environ['P01_RUNS']}/m06_sft_best_outputs.json", "w"), ensure_ascii=False)
 scoreboard.show()
 ```
@@ -211,6 +212,15 @@ scoreboard.show()
 ---
 
 ## 3. So sánh hiệu quả
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M00", "base-zero-shot"), ("M06", "sft_best"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** Đây là phép so **chuẩn** của cả khóa: mô hình gốc vs mô hình fine-tune tốt nhất, đo test đúng một lần. Lưu bảng này vào báo cáo đồ án — các buổi sau đều so với `M06/sft_best`.
+
 
 | Cấu hình | eval_loss (bước 17/34/51) | max grad_norm | val_strict | token/s |
 |---|---|---|---|---|

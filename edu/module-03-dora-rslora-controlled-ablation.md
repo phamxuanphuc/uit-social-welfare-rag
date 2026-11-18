@@ -123,7 +123,8 @@ def run(name, **lora_kw):
     m.eval(); m.config.use_cache = True
     res = evaluate(m, tok, test, batch_size=8)
     m.save_pretrained(adapter_path("m03", name))
-    scoreboard.record("M03", name, res["summary"], latency_s=res["summary"]["sec_per_row"], notes=f"{minutes:.1f}min peak{peak}GB")
+    scoreboard.record("M03", name, res["summary"], latency_s=res["summary"]["sec_per_row"], notes=f"{minutes:.1f}min peak{peak}GB",
+                      outputs=res["outputs"])
     eval_loss = [h["eval_loss"] for h in tr.state.log_history if "eval_loss" in h]
     del m, tr; free()
     return {"name": name, "params": n, "scale": scale, "minutes": round(minutes, 1), "peak_gb": peak,
@@ -178,6 +179,15 @@ plt.xlabel("epoch"); plt.ylabel("eval_loss"); plt.legend(); plt.title("Val loss 
 ---
 
 ## 3. So sánh hiệu quả — Mẫu báo cáo ablation (điền số đo của bạn)
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M02", "sft-lora-r16"), ("M03", "V2_dora_r16"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** Đổi `"V2_dora_r16"` thành `"V3_lora_r64"`/`"V4_rslora_r64"` để so từng biến thể với V1. Ablation thường cho Δ **nằm trong nhiễu** (p > 0,05) — khi đó kết luận đúng là "không khác biệt", chọn bản rẻ hơn.
+
 
 | Biến thể | Tham số train | s | Phút train | VRAM đỉnh | answer_acc | strict_acc | acc_unseen_doc | p vs V1 |
 |---|---|---|---|---|---|---|---|---|

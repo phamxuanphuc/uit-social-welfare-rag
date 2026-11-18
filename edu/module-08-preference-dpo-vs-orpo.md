@@ -169,7 +169,8 @@ policy.save_pretrained(adapter_path("m08", "sft_dpo"), selected_adapters=["defau
 ```python
 policy.eval(); policy.config.use_cache = True
 res_dpo = evaluate(policy, tok, test, batch_size=8)
-scoreboard.record("M08", "sft_dpo", res_dpo["summary"], latency_s=res_dpo["summary"]["sec_per_row"], notes=f"{dpo_min:.1f}min peak{dpo_peak}GB")
+scoreboard.record("M08", "sft_dpo", res_dpo["summary"], latency_s=res_dpo["summary"]["sec_per_row"], notes=f"{dpo_min:.1f}min peak{dpo_peak}GB",
+                  outputs=res_dpo["outputs"])
 del policy, dpo; free()
 ```
 
@@ -191,7 +192,8 @@ orpo_min, orpo_peak = (time.perf_counter() - t0) / 60, vram_gb()["peak"]
 orpo.model.save_pretrained(adapter_path("m08", "orpo_from_base"))
 orpo.model.eval(); orpo.model.config.use_cache = True
 res_orpo = evaluate(orpo.model, tok, test, batch_size=8)
-scoreboard.record("M08", "orpo_from_base", res_orpo["summary"], latency_s=res_orpo["summary"]["sec_per_row"], notes=f"{orpo_min:.1f}min peak{orpo_peak}GB")
+scoreboard.record("M08", "orpo_from_base", res_orpo["summary"], latency_s=res_orpo["summary"]["sec_per_row"], notes=f"{orpo_min:.1f}min peak{orpo_peak}GB",
+                  outputs=res_orpo["outputs"])
 del base, orpo; free()
 ```
 - **Giải thích:** `beta=0.1` của ORPOConfig chính là λ trong công thức mục 1.2. LR 8e-5 cao hơn DPO vì ORPO **đồng thời làm SFT từ đầu** (LoRA khởi tạo từ 0).
@@ -215,6 +217,15 @@ scoreboard.show()
 ---
 
 ## 3. So sánh hiệu quả
+
+### 📊 Trước → Sau: từng câu, cùng bộ chấm
+```python
+from p01kit.compare import compare_runs
+rep = compare_runs(("M06", "sft_best"), ("M08", "sft_dpo"), test)
+```
+- **Đọc báo cáo theo thứ tự:** (1) bảng chỉ số — Δ có ✅/🔻 và khoảng tin cậy của bản *sau*; (2) McNemar — chỉ các câu **đổi kết quả** mang thông tin, p < 0,05 mới gọi là cải thiện thật; (3) lát cắt — cải thiện có đều ở giọng đời thường và văn bản chưa thấy không; (4) **ví dụ cụ thể** — đọc tận mắt câu được sửa và câu bị làm hỏng.
+- 🎯 **Buổi này:** DPO học từ chính lỗi on-policy của `sft_best` → các loại lỗi đã dùng làm cặp *rejected* phải giảm. Đổi thành `("M08", "orpo_from_base")` để so ORPO.
+
 
 | Mô hình | Giai đoạn | Phút train | VRAM đỉnh | refusal_acc | expired_recall | false_expired | strict_acc | acc_unseen_doc | p vs SFT |
 |---|---|---|---|---|---|---|---|---|---|
