@@ -1,63 +1,58 @@
-# Buổi 0 (Module 0): Làm chủ Phòng thí nghiệm Colab T4, Giải phẫu `Qwen3-1.7B` & Đo Mốc Baseline
+# Buổi 0 (Module 0): Máy X-Quang Bộ Não `Qwen3-1.7B` & Bộ Đo Baseline (Chia nhỏ từng ô 4–8 dòng)
 
-- **Thời lượng thực hành:** 45–60 phút trên Google Colab (`T4 GPU`).
-- **Mục tiêu đầu ra:** Hiểu tường tận bộ nhớ VRAM 15 GB, cơ chế cắt chữ `Tokenizer`, cấu trúc 28 tầng bên trong `Qwen/Qwen3-1.7B`, nén `4-bit NF4` xuống `1.27 GB VRAM` và ghi nhận **Mốc Baseline (Trước Fine-tune)**.
+- **Mô hình thực hành:** `Qwen/Qwen3-1.7B` trên Google Colab `T4 GPU`.
+- **🎯 Sản phẩm chạy được cuối buổi:** **Công cụ "X-Quang & Chấm điểm Baseline `Qwen3-1.7B`"** — vừa soi được xác suất Top-5 chữ tiếp theo bên trong não mô hình, vừa tự động chấm điểm xem mô hình gốc trả lời đúng bao nhiêu `%` trên bài toán P01 trước khi học.
+- **Cách thực hành buổi đầu:** Tuyệt đối không chạy khối code dài — bạn chỉ cần copy từng **ô siêu nhỏ (4–8 dòng)** dưới đây vào Colab, bấm chạy và nhìn kết quả ngay!
 
 ---
 
 ## 1. Giải thích Bản chất theo Phương pháp Feynman
 
-1. **Tại sao cần GPU T4 thay vì CPU lúc học?**
-   - **Hình ảnh đời thường:** CPU giống như 1 giáo sư giải toán cực giỏi nhưng làm từng phép tính một; còn GPU T4 giống như **2,560 học sinh cấp 2 đứng thành hàng ngang**, cùng bấm máy tính bỏ túi một lúc. Vì LLM thực chất chỉ là hàng tỷ phép nhân bảng số (`X @ W`), 2,560 học sinh làm đồng loạt sẽ nhanh gấp hàng chục lần!
-2. **VRAM (`15,360 MiB`) và Tại sao phải nén `4-bit NF4`?**
-   - `Qwen3-1.7B` có $1.72$ tỷ con số trọng số (`w`). Nếu mỗi số lưu ở chuẩn 16-bit (`float16` = 2 bytes), riêng bộ não đã ngốn $1.72 \times 2 \approx \mathbf{3.44\text{ GB}}$. Khi huấn luyện, máy phải lưu thêm đạo hàm (*Gradients*) + đà quán tính (*AdamW states*) + kết quả trung gian (*Activations*), làm VRAM vọt lên trên 15 GB gây sập máy (*Out-Of-Memory*).
-   - **`4-bit NF4` (`NormalFloat 4-bit`):** Nén mỗi con số từ 2 bytes xuống **0.5 byte** theo phân phối hình chuông (tập trung độ chi tiết quanh số 0). Nhờ vậy, toàn bộ mô hình chỉ còn chiếm **`1.27 GB VRAM`**, chừa hơn 13 GB trống để học thoải mái!
-3. **`Tokenizer` và Khung hội thoại `ChatML` (`enable_thinking=False`):**
-   - Máy tính không hiểu chữ *"xe ôm"* mà tra cuốn từ điển **151,936 mảnh chữ** để đổi thành dãy số `input_ids`.
-   - Mặc định `Qwen3` có thói quen tự lẩm bẩm trong thẻ `<think>...</think>` rất dài trước khi trả lời. Khi làm trợ lý tra cứu RAG tốc độ cao (học từ `thanhdo881/qwen3-1.7b-vivu-travel-vn`), ta đặt `enable_thinking=False` để khóa thẻ `<think>` tự do, giúp mô hình trả lời thẳng và nhanh gấp 3 lần.
+1. **Tại sao cần GPU T4 thay vì CPU?**
+   - CPU giống 1 giáo sư làm từng phép tính một; còn GPU T4 giống **2,560 học sinh cùng bấm máy tính một lúc**. Vì `Qwen3-1.7B` là 1.72 tỷ con số nhân ma trận, chạy trên T4 nhanh gấp hàng chục lần.
+2. **Tại sao phải nén `4-bit NF4`?**
+   - Ở chuẩn 16-bit (`FP16`), `Qwen3-1.7B` ngốn **~3.44 GB VRAM**. Khi nén sang **`4-bit NF4`**, mỗi con số chỉ tốn 0.5 byte nên toàn bộ mô hình chỉ còn **`1.27 GB VRAM`**, chừa hơn 13 GB trống trên card T4 để bạn thoải mái Fine-tune ở các buổi sau.
+3. **Tại sao phải tắt Thinking Mode (`enable_thinking=False`)?**
+   - Mặc định Qwen3 hay tự lẩm bẩm trong thẻ `<think>...</think>` mất 5–10 giây trước khi trả lời. Tắt đi giúp mô hình trả lời thẳng vào trọng tâm, nhanh gấp 3 lần.
 
 ---
 
-## 2. Thực hành 5 Bước trên Google Colab
+## 2. Thực hành Từng Ô Nhỏ trên Google Colab
 
-### Bước 1: Kiểm tra GPU T4 & Cài đặt thư viện nền tảng
-Mở Colab $\rightarrow$ `Runtime` $\rightarrow$ `Change runtime type` $\rightarrow$ chọn `T4 GPU`, sau đó chạy 2 ô sau:
-
+### Ô 1 (1 dòng): Kiểm tra card đồ họa Tesla T4 15 GB
 ```bash
 !nvidia-smi
 ```
-```bash
-!pip install -q bitsandbytes peft trl datasets accelerate
-```
-- **Cách đọc kết quả `!nvidia-smi`:** Tìm chữ `Tesla T4` và cột `Memory-Usage: 0MiB / 15360MiB` (xác nhận có đủ 15 GB VRAM trống).
+- **Giải thích:** Dấu `!` báo Colab chạy lệnh Linux. Nhìn vào bảng kết quả, thấy chữ `Tesla T4` và `15360MiB` là đạt!
 
 ---
 
-### Bước 2: Mở hộp `AutoTokenizer` & Khung `ChatML` của Qwen3
+### Ô 2 (1 dòng): Cài thư viện nén 4-bit và huấn luyện
+```bash
+!pip install -q bitsandbytes peft trl datasets accelerate
+```
+- **Giải thích:** Cài đặt sẵn `bitsandbytes` (nén 4-bit), `peft` (gắn LoRA) và `trl` (huấn luyện). Cờ `-q` giúp màn hình gọn sạch.
+
+---
+
+### Ô 3 (6 dòng): Tải "Cuốn từ điển" (`Tokenizer`) của `Qwen3-1.7B`
 ```python
 from transformers import AutoTokenizer
 
 model_id = "Qwen/Qwen3-1.7B"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 
-cau_hoi = "Tôi chạy xe ôm ở Phường Tân Tạo bị tai nạn thì cần giấy tờ gì?"
-ids = tokenizer.encode(cau_hoi)
-print("1. Vốn từ điển của Qwen3:", len(tokenizer))
-print("2. Mã số (input_ids):", ids)
-print("3. Từng mảnh chữ:", [tokenizer.decode([i]) for i in ids])
-
-messages = [
-    {"role": "system", "content": "Bạn là trợ lý tra cứu an sinh xã hội. Chỉ dùng 100% tiếng Việt."},
-    {"role": "user", "content": cau_hoi},
-]
-print("\n4. Chuỗi ChatML khi tắt Thinking Mode:")
-print(tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True, enable_thinking=False))
+cau_thu = "Tôi chạy xe ôm ở Phường Tân Tạo bị tai nạn"
+ids = tokenizer.encode(cau_thu)
+print("Số từ trong từ điển:", len(tokenizer), "| Các mảnh cắt:", [tokenizer.decode([i]) for i in ids])
 ```
-- **Giải thích:** `add_generation_prompt=True` tự động gắn `<|im_start|>assistant` ở cuối để báo hiệu tới lượt AI điền câu trả lời; `enable_thinking=False` chèn sẵn cặp `<think>\n\n</think>\n\n` rỗng để AI bỏ qua bước suy nghĩ lan man.
+- **Giải thích từng dòng:**
+  - `AutoTokenizer.from_pretrained(...)`: Tải cuốn sổ danh bạ ~151,936 mảnh chữ của Qwen3.
+  - `tokenizer.encode(...)`: Đổi câu tiếng Việt thành dãy mã số `ids` vì GPU chỉ biết nhân cộng con số.
 
 ---
 
-### Bước 3: Nạp `Qwen3-1.7B` ở chế độ `4-bit NF4` & Soi 28 tầng bên trong
+### Ô 4 (8 dòng): Cấu hình công thức nén `4-bit NF4`
 ```python
 import torch
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
@@ -68,63 +63,78 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_compute_dtype=torch.float16,
     bnb_4bit_use_double_quant=True,
 )
+print("Đã tạo xong công thức nén 4-bit NF4!")
+```
+- **Giải thích từng dòng:**
+  - `load_in_4bit=True` & `bnb_4bit_quant_type="nf4"`: Nén trọng số xuống 4-bit theo phân phối chuẩn.
+  - `bnb_4bit_compute_dtype=torch.float16`: Lúc nhân ma trận thì tạm bung từng cụm nhỏ ra 16-bit để tính cho chuẩn.
 
+---
+
+### Ô 5 (6 dòng): Nạp "Bộ não" `Qwen3-1.7B` lên GPU T4 và đo VRAM
+```python
 model = AutoModelForCausalLM.from_pretrained(
     model_id,
     quantization_config=bnb_config,
     device_map="auto",
 )
-print(f"VRAM đang chiếm (4-bit NF4): {torch.cuda.memory_allocated() / (1024**3):.2f} GB")
-print("\nCấu trúc 1 tầng Transformer của Qwen3:\n", model.model.layers[0])
-```
-- **Giải thích các lớp bạn nhìn thấy trong `layers[0]`:**
-  - `self_attn` (`q_proj`, `k_proj`, `v_proj`, `o_proj`): Các ma trận giúp các chữ trong câu liên kết với nhau.
-  - `mlp` (`gate_proj`, `up_proj`, `down_proj` kèm `SiLU`): Bộ lọc phi tuyến giúp mô hình ghi nhớ quy tắc.
-  - Đây chính là **7 vị trí vàng** mà các buổi sau ta sẽ gắn giấy ghi chú `LoRA / DoRA` vào!
-
----
-
-### Bước 4: Tự tay xem `Softmax` chọn chữ tiếp theo (Xóa bỏ hoàn toàn hộp đen)
-```python
-prompt = "Người lao động chạy xe ôm bị tai nạn nộp hồ sơ tại"
-inp = tokenizer(prompt, return_tensors="pt").to("cuda")
-
-with torch.no_grad():
-    logits = model(**inp).logits[0, -1, :]
-    probs = torch.softmax(logits, dim=-1)
-
-top_probs, top_ids = torch.topk(probs, 5)
-for p, tid in zip(top_probs, top_ids):
-    print(f"Từ ứng viên: '{tokenizer.decode([tid.item()])}' | Xác suất: {p.item()*100:.2f}%")
-```
-
----
-
-### Bước 5: Ghi nhận kết quả 🔴 TRƯỚC Fine-tune (Mốc Baseline)
-```python
 model.eval()
+print(f"Đã nạp Qwen3-1.7B! VRAM chỉ tốn: {torch.cuda.memory_allocated() / (1024**3):.2f} GB")
+```
+- **Giải thích:** `device_map="auto"` tự động đẩy toàn bộ 28 tầng của Qwen3 lên GPU T4. Bạn sẽ thấy VRAM chỉ tốn đúng **`1.27 GB`**!
 
-def ask_baseline(question):
-    msgs = [
-        {"role": "system", "content": "Bạn là trợ lý tra cứu an sinh xã hội. Chỉ dùng 100% tiếng Việt."},
-        {"role": "user", "content": question},
-    ]
+---
+
+### Ô 6 (9 dòng): 🎯 Sản phẩm 1 — "Máy X-Quang" soi Top-5 chữ trong não `Qwen3-1.7B`
+```python
+def xray_next_word(prompt_text: str):
+    inp = tokenizer(prompt_text, return_tensors="pt").to("cuda")
+    with torch.no_grad():
+        probs = torch.softmax(model(**inp).logits[0, -1, :], dim=-1)
+    top_p, top_i = torch.topk(probs, 5)
+    print(f"\n🔬 X-Quang câu: '{prompt_text} ...'")
+    for p, tid in zip(top_p, top_i):
+        print(f"  -> '{tokenizer.decode([tid.item()])}' ({p.item()*100:.1f}%)")
+
+xray_next_word("Người lao động chạy xe ôm bị tai nạn cần nộp hồ sơ tại")
+```
+- **Giải thích:** Hàm `torch.softmax` biến 151,936 điểm số ở tầng cuối của Qwen3 thành phần trăm `%`. Bạn thấy tận mắt 5 chữ mà mô hình đang định viết tiếp theo!
+
+---
+
+### Ô 7 (10 dòng): Viết hàm hỏi đáp tắt `<think>` (`enable_thinking=False`)
+```python
+def ask_qwen(question: str, sys_msg: str = "Trả lời ngắn gọn bằng 100% tiếng Việt.") -> str:
+    msgs = [{"role": "system", "content": sys_msg}, {"role": "user", "content": question}]
     text = tokenizer.apply_chat_template(
         msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False
     )
-    inputs = tokenizer([text], return_tensors="pt").to("cuda")
-    prompt_len = inputs["input_ids"].shape[-1]
+    inp = tokenizer([text], return_tensors="pt").to("cuda")
     with torch.no_grad():
-        out = model.generate(**inputs, max_new_tokens=180, do_sample=False)
-    return tokenizer.decode(out[0][prompt_len:], skip_special_tokens=True)
+        out = model.generate(**inp, max_new_tokens=150, do_sample=False)
+    return tokenizer.decode(out[0][inp["input_ids"].shape[-1]:], skip_special_tokens=True)
 
-print("🔴 KẾT QUẢ BASELINE (CHƯA FINE-TUNE):")
-print(ask_baseline("Địa bàn: Phường Tân Tạo. Tôi chạy xe ôm bị tai nạn cần chuẩn bị giấy tờ gì và nộp ở đâu?"))
+print(ask_qwen("Tôi chạy xe ôm ở Phường Tân Tạo bị tai nạn thì nộp hồ sơ nhận hỗ trợ ở đâu?"))
 ```
-- **Quan sát lỗi của Baseline:** Mô hình gốc sẽ trả lời chung chung (kiểu lên cơ quan công an hoặc bảo hiểm xã hội quận/huyện), **không biết** đến mã văn bản `NQ-01/2026/HĐND-HCM` hay *Bộ phận Một cửa UBND Phường Tân Tạo*.
+- **Giải thích:** `do_sample=False` bắt mô hình luôn chọn chữ có xác suất cao nhất (không tung xúc xắc ngẫu nhiên), giúp kết quả đo lường cố định 100%.
 
 ---
 
-## 3. Câu hỏi Tự kiểm tra cuối Buổi 0 (Checkpoint)
-1. Tại sao `load_in_4bit=True` giảm VRAM xuống `1.27 GB` nhưng vẫn cần `bnb_4bit_compute_dtype=torch.float16`? *(Trả lời: Lưu trữ ở 4-bit cho nhẹ, nhưng lúc nhân ma trận tạm bung ra 16-bit để không mất độ chính xác)*.
-2. Tham số `enable_thinking=False` giải quyết vấn đề gì của dòng mô hình Qwen3 khi làm RAG? *(Trả lời: Tắt khối `<think>` tự do dài dòng, giảm độ trễ và tránh lặp vô tận)*.
+### Ô 8 (10 dòng): 📊 Sản phẩm 2 — Bảng Chấm điểm Baseline Tự động (Trước Fine-tune)
+```python
+baseline_tests = [
+    ("Tôi chạy xe ôm ở Phường Tân Tạo bị tai nạn cần văn bản nào?", "NQ-01/2026/HĐND-HCM"),
+    ("Con của phụ hồ ở Phường Tân Tạo xin hỗ trợ BHYT theo quyết định nào?", "QĐ-15/2026/UBND-HCM"),
+    ("Xin tiền thuê nhà trọ năm 2024 ở Phường Tân Tạo còn hiệu lực không?", "hết hiệu lực"),
+]
+
+correct = 0
+for q, expected_kw in baseline_tests:
+    ans = ask_qwen(q)
+    hit = expected_kw.lower() in ans.lower()
+    correct += int(hit)
+    print(f"\n❓ {q}\n🔴 Trả lời gốc: {ans[:120]}...\n👉 Chứa thông tin chuẩn '{expected_kw}': {hit}")
+
+print(f"\n📊 ĐIỂM BASELINE (TRƯỚC FINE-TUNE): {correct}/{len(baseline_tests)} ({correct/len(baseline_tests)*100:.0f}%)")
+```
+- **Ý nghĩa động lực:** Bạn sẽ thấy điểm Baseline ban đầu là **`0/3 (0%)`** vì `Qwen3-1.7B` gốc chưa hề biết quy định địa phương P01. Từ Buổi 1 trở đi, chúng ta sẽ làm con số này tăng lên **`100%`**!

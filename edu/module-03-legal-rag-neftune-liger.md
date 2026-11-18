@@ -1,32 +1,31 @@
-# Buổi 3 (Module 3): Pháp luật & Thủ tục Hành chính Việt Nam — `NEFTune`, `Unsloth + Liger Kernel` & Công bằng Ngôn ngữ
+# Buổi 3 (Module 3): Xây dựng Bộ Dịch Pháp lý `Legal-Translator` trên `Qwen3-1.7B` — `NEFTune`, `Unsloth + Liger Kernel` & Đo Độ Lệch Công Bằng
 
-- **Dự án tham chiếu:** `duyet/vietnamese-legal-instruct` (127k mẫu `vbpl.vn`), `fisherman611/vietnamese-legal-chatbot` (Hybrid Search Dense + BM25 + Reranker), `tangbamiinh/traffic-law-assistant` (phân tách thực thể pháp lý), các mô hình của `AITeamVN`, `5CD-AI`, `bkai-foundation-models`, `ura-hcmut`.
-- **Mục tiêu đầu ra:** Hiểu và thực hành ánh xạ ngôn ngữ đời thường sang thuật ngữ pháp lý (`ColloquialMapping`), bật **`NEFTune` (`neftune_noise_alpha=5`)** chống học vẹt, kích hoạt **`Unsloth + Liger Kernel`** giảm 60% VRAM cho văn bản dài, và đo độ chênh lệch Công bằng (**Fairness Gap $\le 10\%$**).
+- **Mô hình thực hành:** `Qwen/Qwen3-1.7B` trên Google Colab `T4 GPU`.
+- **🎯 Sản phẩm chạy được cuối buổi:** **Bộ Dịch Ngôn ngữ Đời thường sang Thủ tục Pháp luật (`Legal-Translator`)** — người lao động hỏi bằng từ truyền miệng (*xe ôm, bán vé số, phụ hồ, tiền trọ*), hệ thống trả về đúng `Mã văn bản`, `Điều khoản` và `Danh sách hồ sơ`, kèm **Bảng chấm điểm Độ lệch Công bằng (`Fairness Gap`: Câu chuẩn vs. Câu đời thường) 🔴 Trước vs. 🟢 Sau**.
 
 ---
 
 ## 1. Giải thích Bản chất theo Phương pháp Feynman
 
-1. **Vấn đề "Rào cản ngôn ngữ hành chính" (Trục Công bằng — Fairness trong Rubric P01):**
-   - **Hình ảnh Feynman:** Văn bản pháp luật trên `vbpl.vn` viết bằng ngôn ngữ trang trọng (*"Lao động không có giao kết hợp đồng lao động bị suy giảm khả năng lao động"*), nhưng người dân ngoài đời lại hỏi bằng từ truyền miệng (*"Tôi chạy xe ôm công nghệ bị té xe nghỉ làm tuần nay"*).
-   - Nếu chỉ tìm kiếm và huấn luyện trên câu chữ luật cứng nhắc, người biết chữ nghĩa hành chính sẽ được AI trả lời đúng `95%`, còn người lao động nghèo nói chuyện đời thường chỉ nhận được câu trả lời đúng `50%` $\rightarrow$ **Hệ thống AI gây bất công xã hội!**
-   - **Giải pháp kép (học từ `fisherman611` & `tangbamiinh`):**
-     1. Ở tầng tìm kiếm: Kết hợp **Bảng từ đồng nghĩa đời thường (`ColloquialMapping`)** + **Hybrid Search (Dense ngữ nghĩa + BM25 từ khóa)**.
-     2. Ở tầng Fine-tune LLM: Dùng **`NEFTune`** để mô hình học *ý nghĩa khái quát* thay vì học thuộc lòng từ khóa.
-2. **`NEFTune` (`Noisy Embedding Fine-Tuning`, `neftune_noise_alpha=5`) hoạt động ra sao?**
-   - **Hình ảnh Feynman:** Nếu bạn học thuộc lòng một bài văn trong phòng kín yên tĩnh tuyệt đối, ra phòng thi chỉ cần giám thị đổi 2 chữ trong đề là bạn đứng hình (*Overfitting*). `NEFTune` giống như việc bật tiếng ồn trắng nhẹ ($\alpha = 5$) vào tai người học trong lúc ôn bài: nó cộng một chút nhiễu ngẫu nhiên vào tọa độ từ vựng (`Embedding`), buộc bộ não `Qwen3-1.7B` không thể nhớ vẹt mặt chữ mà phải nắm bắt **ý nghĩa vùng lân cận**.
-3. **Tại sao đến Buổi 3 lại bật `Unsloth` + `Liger Kernel`?**
-   - Văn bản pháp luật và thủ tục hành chính thường dài (1,000 – 2,048 tokens). Ở tầng cuối cùng của Qwen3, phép tính `Softmax + Cross-Entropy` phải nhân với bảng từ điển **151,936 từ**, tạo ra một bảng số tạm thời chiếm tới **4–6 GB VRAM**.
-   - **`Liger Kernel`** tính gộp phép toán đó thành từng lát nhỏ ngay trong bộ nhớ siêu tốc của GPU (*SRAM*) mà không tạo bảng số khổng lồ trên VRAM $\rightarrow$ **giảm ngay ~60% VRAM** và tăng tốc gấp đôi!
+1. **Tại sao AI thường "thiên vị" người nói chữ nghĩa hành chính hơn người lao động nghèo?**
+   - **Hình ảnh Feynman:** Văn bản luật trên `vbpl.vn` viết *"Lao động không có giao kết hợp đồng bị suy giảm khả năng lao động"*, còn người dân hỏi *"Tôi chạy xe ôm bị té xe nghỉ làm tuần nay"*. Nếu không có **Bảng ánh xạ đời thường (`ColloquialMapping`)** và **bơm nhiễu chống học vẹt (`NEFTune`)**, AI sẽ trả lời đúng `100%` cho câu hỏi chuẩn nhưng trượt câu hỏi đời thường!
+2. **`NEFTune` (`neftune_noise_alpha=5`) giúp ích gì?**
+   - Bơm một lớp "tiếng ồn trắng" rất nhỏ vào tọa độ từ vựng trong lúc học để `Qwen3-1.7B` không thể học vẹt từng mặt chữ mà phải nắm **ý nghĩa vùng lân cận**.
+3. **Tại sao bắt đầu bật `Unsloth + Liger Kernel` từ Buổi 3?**
+   - Bạn đã hiểu toàn bộ gốc rễ của `transformers + peft + trl` ở Buổi 0–2. Từ Buổi 3, văn bản luật dài hơn nên ta bật "bộ tăng áp" **`Unsloth + Liger Kernel`** để gộp phép tính `Cross-Entropy`, giúp chạy **nhanh gấp 2 lần** và **tiết kiệm 60% VRAM**!
 
 ---
 
-## 2. Thực hành 5 Bước trên Google Colab
+## 2. Thực hành Từng Ô Nhỏ trên Google Colab (6–12 dòng/ô)
 
-### Bước 1: Cài đặt `Unsloth` & `Liger Kernel` và Nạp mô hình tăng tốc
+### Ô 1 (2 dòng): Cài đặt `Unsloth` & `Liger Kernel`
 ```bash
 !pip install -q unsloth liger-kernel
 ```
+
+---
+
+### Ô 2 (9 dòng): Nạp `Qwen3-1.7B` bằng động cơ tăng tốc `FastLanguageModel`
 ```python
 from unsloth import FastLanguageModel
 
@@ -36,139 +35,120 @@ model_fast, tokenizer = FastLanguageModel.from_pretrained(
     dtype=None,
     load_in_4bit=True,
 )
+FastLanguageModel.for_inference(model_fast)
+print("Đã nạp Qwen3-1.7B với Unsloth 4-bit!")
 ```
+- **Giải thích:** `FastLanguageModel.from_pretrained` thay thế cho cả cụm `BitsAndBytesConfig` + `AutoModelForCausalLM` ở Buổi 0–2 và tự động kích hoạt các nhân GPU Triton tốc độ cao.
 
 ---
 
-### Bước 2: Thiết lập `ColloquialMapping` & Cặp câu hỏi Song song (Chuẩn vs. Đời thường)
+### Ô 3 (11 dòng): Tạo Bộ Từ điển Đời thường $\rightarrow$ Pháp lý (`ColloquialMapping`)
 ```python
 COLLOQUIAL_MAP = {
     "xe ôm": "lao động phi chính thức vận tải xe hai bánh",
     "chạy grab": "lao động phi chính thức lái xe công nghệ",
-    "bán vé số": "lao động tự do bán vé số lẻ",
+    "bán vé số": "lao động tự do bán vé số dạo",
     "phụ hồ": "lao động tự do ngành xây dựng",
     "tiền trọ": "hỗ trợ tiền thuê nhà trọ",
     "sổ hộ khẩu": "giấy xác nhận thông tin cư trú CT07",
 }
 
-def expand_colloquial(query: str) -> str:
-    added = [formal for slang, formal in COLLOQUIAL_MAP.items() if slang in query.lower()]
-    return f"{query} ({', '.join(added)})" if added else query
-
-paired_eval = [
-    {
-        "formal": "Hồ sơ đề nghị hưởng trợ cấp tai nạn lao động đối với lao động phi chính thức tại Phường Tân Tạo gồm những giấy tờ gì?",
-        "colloquial": "Tôi chạy xe ôm ở Phường Tân Tạo mới bị té xe nghỉ làm thì đem giấy gì lên phường xin hỗ trợ vậy?",
-        "expected_doc": "NQ-01/2026/HĐND-HCM",
-    },
-    {
-        "formal": "Thủ tục đăng ký hỗ trợ 100% mức đóng Bảo hiểm y tế cho con của người lao động tự do thu nhập thấp tại Phường Tân Tạo?",
-        "colloquial": "Tôi đi phụ hồ nghèo quá muốn xin thẻ bảo hiểm đi khám bệnh cho đứa nhỏ ở Phường Tân Tạo cần giấy tờ chi?",
-        "expected_doc": "QĐ-15/2026/UBND-HCM",
-    },
-]
-print("Ví dụ mở rộng câu đời thường:\n", expand_colloquial(paired_eval[0]["colloquial"]))
+def expand_query(q: str) -> str:
+     matched = [v for k, v in COLLOQUIAL_MAP.items() if k in q.lower()]
+    return f"{q} [Thuật ngữ pháp lý: {', '.join(matched)}]" if matched else q
 ```
 
 ---
 
-### Bước 3: Chuẩn bị dữ liệu Pháp luật Hành chính (kết cấu Thực thể kiểu `tangbamiinh` & `vbpl.vn`)
+### Ô 4 (12 dòng): Tạo Kho Văn bản Luật & Bộ Đề Thi Song Song (Câu Chuẩn vs. Câu Đời thường)
+```python
+LEGAL_CTX = (
+    "[1] NQ-01/2026/HĐND-HCM (Điều 4, Khoản 2): Hỗ trợ lao động phi chính thức gặp tai nạn lao động. "
+    "Hồ sơ: Đơn Mẫu 01-ASXH, CCCD/CT07, Xác nhận Tổ dân phố, Giấy ra viện. Nơi nộp: UBND Phường Tân Tạo.\n"
+    "[2] QĐ-15/2026/UBND-HCM (Điều 3, Khoản 1): Hỗ trợ 100% thẻ BHYT cho con lao động tự do thu nhập thấp. "
+    "Hồ sơ: Tờ khai TK1-TS, Giấy khai sinh, Xác nhận thu nhập thấp. Nơi nộp: Điểm ASXH Phường Tân Tạo."
+)
+
+paired_tests = [
+    {"formal": "Hồ sơ hưởng trợ cấp tai nạn lao động cho lao động phi chính thức gồm những gì?",
+     "colloquial": "Tôi chạy xe ôm bị té xe nghỉ làm mấy bữa nay thì đem giấy gì lên phường xin tiền?",
+     "expected_doc": "NQ-01/2026/HĐND-HCM", "expected_paper": "Mẫu 01-ASXH"},
+    {"formal": "Thủ tục hỗ trợ 100% mức đóng Bảo hiểm y tế cho con của lao động tự do thu nhập thấp?",
+     "colloquial": "Đi phụ hồ nghèo quá muốn xin cái thẻ bảo hiểm cho con đi khám bệnh cần nộp giấy chi?",
+     "expected_doc": "QĐ-15/2026/UBND-HCM", "expected_paper": "TK1-TS"},
+]
+```
+
+---
+
+### Ô 5 (12 dòng): Hàm Chấm điểm Độ lệch Công bằng (`Fairness Gap`) & Đo 🔴 TRƯỚC Fine-tune
+```python
+SYS_LEGAL = "Trả lời bằng JSON gồm: verification_reasoning, doc_code, article, required_documents, submission_place."
+
+def eval_fairness(m, use_expansion: bool) -> dict:
+    scores = {"formal": 0, "colloquial": 0}
+    for item in paired_tests:
+        for style in ("formal", "colloquial"):
+            q_in = expand_query(item[style]) if use_expansion else item[style]
+            ans = ask_vivu(m, LEGAL_CTX, q_in, use_lora=True)
+            hit = (item["expected_doc"] in ans) and (item["expected_paper"] in ans)
+            scores[style] += int(hit)
+    f_acc = scores["formal"] / len(paired_tests) * 100
+    c_acc = scores["colloquial"] / len(paired_tests) * 100
+    return {"formal_acc": f_acc, "colloquial_acc": c_acc, "gap": abs(f_acc - c_acc)}
+
+before_fairness = eval_fairness(model_fast, use_expansion=False)
+print("🔴 TRƯỚC FINE-TUNE & CHƯA MỞ RỘNG TỪ ĐỜI THƯỜNG:", before_fairness)
+```
+
+---
+
+### Ô 6 (12 dòng): Đóng gói Dữ liệu Huấn luyện Pháp lý & Gắn `DoRA + rsLoRA`
 ```python
 import json
 from datasets import Dataset
 
-legal_context = (
-    "[Văn bản 1] NQ-01/2026/HĐND-HCM (Điều 4, Khoản 2 - Hiệu lực: 2026-01-15, Phiên bản: v2.1, Địa bàn: TP.HCM - Phường Tân Tạo): "
-    "Đối tượng: Lao động phi chính thức (xe ôm, bán vé số, phụ hồ). Hồ sơ gồm: (1) Đơn Mẫu 01-ASXH, (2) CCCD hoặc CT07, "
-    "(3) Xác nhận Tổ dân phố, (4) Giấy ra viện. Nơi nộp: Bộ phận Một cửa UBND Phường Tân Tạo.\n"
-    "[Văn bản 2] QĐ-15/2026/UBND-HCM (Điều 3, Khoản 1 - Hiệu lực: 2026-03-01, Phiên bản: v1.0, Địa bàn: TP.HCM - Phường Tân Tạo): "
-    "Đối tượng: Con của lao động tự do thu nhập thấp. Hồ sơ gồm: (1) Tờ khai Mẫu TK1-TS, (2) Giấy khai sinh của con, "
-    "(3) Xác nhận thu nhập thấp, (4) Bản sao CCCD. Nơi nộp: Điểm tiếp nhận ASXH Phường Tân Tạo."
-)
-
-train_pairs = [
-    (
-        "Tôi chạy grab ở Phường Tân Tạo bị tai nạn giao thông cần nộp giấy tờ gì và ở đâu?",
-        {
-            "verification_reasoning": "Đối tượng chạy grab là lao động phi chính thức tại Phường Tân Tạo, khớp NQ-01/2026/HĐND-HCM (Điều 4, Khoản 2).",
-            "doc_code": "NQ-01/2026/HĐND-HCM",
-            "article": "Điều 4, Khoản 2",
-            "required_documents": ["Đơn Mẫu 01-ASXH", "CCCD hoặc CT07", "Xác nhận Tổ dân phố", "Giấy ra viện"],
-            "submission_place": "Bộ phận Một cửa UBND Phường Tân Tạo"
-        }
-    ),
-    (
-        "Bán vé số ở Phường Tân Tạo muốn làm thẻ BHYT cho con đi học cần giấy gì?",
-        {
-            "verification_reasoning": "Hỗ trợ thẻ BHYT cho con lao động tự do tại Phường Tân Tạo, khớp QĐ-15/2026/UBND-HCM (Điều 3, Khoản 1).",
-            "doc_code": "QĐ-15/2026/UBND-HCM",
-            "article": "Điều 3, Khoản 1",
-            "required_documents": ["Tờ khai Mẫu TK1-TS", "Giấy khai sinh của con", "Xác nhận thu nhập thấp", "Bản sao CCCD"],
-            "submission_place": "Điểm tiếp nhận ASXH Phường Tân Tạo"
-        }
-    ),
+train_m3 = [
+    ("Tôi chạy grab bị tai nạn giao thông cần nộp giấy gì?",
+     {"verification_reasoning": "Chạy grab là lao động phi chính thức gặp tai nạn, áp dụng NQ-01/2026/HĐND-HCM.",
+      "doc_code": "NQ-01/2026/HĐND-HCM", "article": "Điều 4, Khoản 2",
+      "required_documents": ["Đơn Mẫu 01-ASXH", "CCCD/CT07", "Xác nhận Tổ dân phố", "Giấy ra viện"],
+      "submission_place": "UBND Phường Tân Tạo"}),
+    ("Bán vé số dạo muốn xin thẻ bảo hiểm y tế cho đứa con đi học cần hồ sơ gì?",
+     {"verification_reasoning": "Xin thẻ BHYT cho con lao động tự do, áp dụng QĐ-15/2026/UBND-HCM.",
+      "doc_code": "QĐ-15/2026/UBND-HCM", "article": "Điều 3, Khoản 1",
+      "required_documents": ["Tờ khai TK1-TS", "Giấy khai sinh", "Xác nhận thu nhập thấp"],
+      "submission_place": "Điểm ASXH Phường Tân Tạo"}),
 ] * 8
 
-ds_module3 = Dataset.from_list([
-    {
-        "messages": [
-            {"role": "system", "content": "Trả lời thủ tục hành chính bằng JSON chuẩn theo đúng văn bản pháp luật trong ngữ cảnh."},
-            {"role": "user", "content": format_rag_input(legal_context, expand_colloquial(q))},
-            {"role": "assistant", "content": json.dumps(ans, ensure_ascii=False)},
-        ]
-    }
-    for q, ans in train_pairs
+ds_m3 = Dataset.from_list([
+    {"messages": [{"role": "system", "content": SYS_LEGAL},
+                  {"role": "user", "content": make_prompt(LEGAL_CTX, expand_query(q))},
+                  {"role": "assistant", "content": json.dumps(a, ensure_ascii=False)}]}
+    for q, a in train_m3
 ])
 ```
 
 ---
 
-### Bước 4: Huấn luyện với `DoRA + rsLoRA + NEFTune (alpha=5)`
+### Ô 7 (12 dòng): Huấn luyện với `NEFTune (alpha=5)` & So sánh Bảng Điểm 🔴 TRƯỚC vs. 🟢 SAU
 ```python
 from trl import SFTConfig, SFTTrainer
 
 model_fast = FastLanguageModel.get_peft_model(
-    model_fast,
-    r=16,
-    lora_alpha=32,
-    use_dora=True,
-    use_rslora=True,
+    model_fast, r=16, lora_alpha=32, use_dora=True, use_rslora=True,
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
 )
-
 trainer_m3 = SFTTrainer(
-    model=model_fast,
-    processing_class=tokenizer,
-    train_dataset=ds_module3,
-    args=SFTConfig(
-        output_dir="outputs_module3",
-        max_steps=30,
-        per_device_train_batch_size=2,
-        learning_rate=2e-4,
-        neftune_noise_alpha=5,
-        logging_steps=5,
-        fp16=True,
-        report_to="none",
-    ),
+    model=model_fast, processing_class=tokenizer, train_dataset=ds_m3,
+    args=SFTConfig(output_dir="out_m3", max_steps=30, per_device_train_batch_size=2,
+                   learning_rate=2e-4, neftune_noise_alpha=5, logging_steps=5, fp16=True, report_to="none"),
 )
 trainer_m3.train()
-```
-
----
-
-### Bước 5: Đo Độ Lệch Công Bằng (`Fairness Gap`: Câu chuẩn vs. Câu đời thường)
-```python
 FastLanguageModel.for_inference(model_fast)
 
-for item in paired_eval:
-    for style in ("formal", "colloquial"):
-        q_expanded = expand_colloquial(item[style])
-        res = ask_rag(model_fast, legal_context, q_expanded, use_lora=True)
-        matched = item["expected_doc"] in res
-        print(f"[{style.upper():10s}] Khớp {item['expected_doc']} = {matched} | Output: {res[:110]}...")
+after_fairness = eval_fairness(model_fast, use_expansion=True)
+print("\n🏆 BẢNG SO SÁNH CÔNG BẰNG (FAIRNESS GAP <= 10%):")
+print("🔴 Trước (Raw Base):       ", before_fairness)
+print("🟢 Sau (Map + NEFTune SFT):", after_fairness)
 ```
-
----
-
-## 3. Câu hỏi Tự kiểm tra cuối Buổi 3 (Checkpoint)
-1. Tại sao phải kết hợp cả `expand_colloquial()` (từ điển) lẫn `neftune_noise_alpha=5` (nhiễu embedding)? *(Trả lời: Từ điển bắt các từ lóng phổ biến đã biết, còn NEFTune giúp mô hình tổng quát hóa với các cách diễn đạt đời thường mới chưa có trong từ điển)*.
