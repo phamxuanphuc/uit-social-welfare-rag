@@ -204,3 +204,22 @@ def cohen_kappa(labels_a: Sequence[str], labels_b: Sequence[str]) -> float:
     ca, cb = Counter(labels_a), Counter(labels_b)
     pe = sum(ca[k] * cb[k] for k in set(ca) | set(cb)) / n ** 2
     return 1.0 if pe == 1 else round((po - pe) / (1 - pe), 4)
+
+
+ERROR_LABELS = ("dung", "le_ra_tu_choi", "tu_choi_nham", "khong_canh_bao_het_han", "sai_van_ban", "sai_giay_to_noi_nop")
+
+
+def error_category(score: dict) -> str:
+    """Quy một kết quả `score_one` về đúng MỘT nhãn trong hướng dẫn gán nhãn (ưu tiên lỗi nguy hiểm trước)."""
+    if score["strict_ok"]:
+        return "dung"
+    gold_refusal = score["docs_f1"] is None
+    if gold_refusal:
+        return "le_ra_tu_choi"
+    if not score["cited"]:
+        return "tu_choi_nham"
+    if not score["citation_ok"]:
+        return "sai_van_ban"
+    if not score["expired_ok"]:
+        return "khong_canh_bao_het_han"
+    return "sai_giay_to_noi_nop"
