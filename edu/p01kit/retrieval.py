@@ -67,3 +67,16 @@ def mrr(ranked_ids: list[list[str]], gold_ids: list[str]) -> float:
         if g in r:
             tot += 1 / (r.index(g) + 1)
     return tot / max(1, len(gold_ids))
+
+
+def hit_at_k(ranked_ids: list[list[str]], gold_sets: list[set[str]], k: int) -> float:
+    """Tỉ lệ câu hỏi có ÍT NHẤT một văn bản đúng trong top-k (dùng khi một câu có nhiều đáp án, như Zalo Legal)."""
+    return sum(bool(set(r[:k]) & g) for r, g in zip(ranked_ids, gold_sets, strict=True)) / max(1, len(gold_sets))
+
+
+def mrr_at_k(ranked_ids: list[list[str]], gold_sets: list[set[str]], k: int = 10) -> float:
+    """MRR@k: trung bình 1/vị trí của văn bản đúng ĐẦU TIÊN trong top-k (0 nếu không có)."""
+    tot = 0.0
+    for r, g in zip(ranked_ids, gold_sets, strict=True):
+        tot += next((1 / (i + 1) for i, d in enumerate(r[:k]) if d in g), 0.0)
+    return tot / max(1, len(gold_sets))
