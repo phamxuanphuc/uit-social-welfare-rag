@@ -16,7 +16,7 @@
 
 1. Hiểu **Qwen3-1.7B là gì bên trong** (tokenizer, chat template, chế độ thinking, bộ nhớ).
 2. Viết công cụ sinh văn bản **theo lô** (batched generation) — kỹ năng tối ưu bắt buộc khi chạy đánh giá trên hàng trăm câu.
-3. Đo baseline trên **chính tập test sẽ dùng xuyên suốt 15 buổi**, ghi vào bảng điểm `leaderboard.csv`.
+3. Đo baseline trên **chính tập test sẽ dùng xuyên suốt 16 buổi**, ghi vào bảng điểm `leaderboard.csv`.
 
 > 💡 **Nguyên tắc vàng của cả lộ trình:** mọi buổi đều đo trên **cùng 100 câu test** (`edu/data/p01_test.jsonl`), cùng prompt, cùng bộ chấm. Nhờ vậy các con số giữa các buổi **so sánh được với nhau**.
 

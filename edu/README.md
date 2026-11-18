@@ -1,10 +1,11 @@
 # Lộ trình Thực chiến Fine-tune `Qwen3-1.7B` — Đồ án P01 (SDG 1.3)
 
-15 buổi, từ "chưa từng fine-tune" đến **tự tin đi phỏng vấn/đi làm** vị trí LLM / AI Engineer. Mọi buổi đều:
+16 buổi, từ "chưa từng fine-tune" đến **tự tin đi phỏng vấn/đi làm** vị trí LLM / AI Engineer. Mọi buổi đều:
 - **Thực hành trên `Qwen/Qwen3-1.7B`** (Google Colab T4 miễn phí). Hai buổi dùng thêm mô hình cùng họ Qwen3 cho tầng truy xuất (`Qwen3-Embedding-0.6B`, `Qwen3-Reranker-0.6B`).
 - Có **sản phẩm chạy được** (adapter, pipeline, file GGUF, báo cáo) lưu trên Google Drive.
 - **So sánh hiệu quả trên cùng 100 câu test giữ riêng**, cùng prompt, cùng bộ chấm. Kết quả ghi vào một **bảng điểm xuyên suốt** (`leaderboard.csv`), kèm khoảng tin cậy và kiểm định McNemar.
 - Có **câu hỏi phỏng vấn kèm đáp án**, **bài tập** bắt buộc/nâng cao và **checklist**.
+- Có mục **🏢 Ở công ty thật** chỉ ra bài lab đã đơn giản hóa những gì so với dự án ở doanh nghiệp (dữ liệu thật, job có cấu hình, registry, CI, phân quyền, ký duyệt nhiều bên).
 
 > ⚠️ **Dữ liệu GIẢ LẬP — không dùng để tra cứu thủ tục thật.** Toàn bộ văn bản chính sách trong [`data/policies.json`](data/policies.json) là **hư cấu** phục vụ học tập. Mã văn bản (ví dụ `NQ-01/2026/HĐND-HCM`), điều khoản, mức tiền, giấy tờ và nơi nộp đều do nhóm tự đặt. Tên địa bàn (TP.HCM, Phường Tân Tạo, Quận Liên Chiểu…) có thật nhưng **không có văn bản nào ở đây do cơ quan nhà nước ban hành**. Mô hình huấn luyện theo lộ trình này chỉ "biết" các văn bản hư cấu đó; muốn biết quyền lợi thật, hãy hỏi cán bộ UBND/BHXH nơi cư trú.
 
@@ -12,9 +13,9 @@
 | Giai đoạn | Buổi | Cách viết code |
 |---|---|---|
 | 🔬 **Mở hộp đen** | 00 → 04 | Ô siêu nhỏ (≤ 10–12 dòng). Mỗi ô theo khung *Mục tiêu → Code → Giải thích → 📌 Kết quả nên thấy → ⚠️ Lỗi hay gặp*. Tự viết masking, LoRA, vòng train trước khi dùng thư viện cấp cao |
-| 🧩 **Thực chiến** | 05 → 14 | Khối gộp theo chuẩn kỹ sư. Trọng tâm chuyển sang thiết kế thí nghiệm, đọc log, ra quyết định |
+| 🧩 **Thực chiến** | 05 → 15 | Khối gộp theo chuẩn kỹ sư. Trọng tâm chuyển sang thiết kế thí nghiệm, đọc log, ra quyết định |
 
-## Bản đồ 15 buổi
+## Bản đồ 16 buổi
 | Buổi | File | Kỹ thuật trọng tâm | 🎯 Sản phẩm | Phép so sánh chính |
 |---|---|---|---|---|
 | 00 | [module-00](module-00-colab-qwen3-anatomy-baseline.md) | Giải phẫu Qwen3, token tiếng Việt, NF4, thinking on/off, sinh theo lô | Máy X-quang token, bộ sinh theo lô, **baseline** | VRAM ước tính vs thực đo; batch 1 vs 8 |
@@ -32,6 +33,7 @@
 | 12 | [module-12](module-12-retrieval-embedding-reranker.md) | BM25, Qwen3-Embedding + LoRA (MNRL, NO_DUPLICATES), Qwen3-Reranker, RAG đầu-cuối | `m12/qwen3_emb_lora` | 5 retriever; ngữ cảnh dựng sẵn vs truy xuất thật |
 | 13 | [module-13](module-13-merge-gguf-imatrix-serving.md) | Merge FP16, llama.cpp `b12084`, **imatrix thật**, JSON Schema decoding, TTFT CPU | GGUF + `quant_report.json` | F16/Q8/Q4/Q3 ± imatrix; schema vs tự do |
 | 14 | [module-14](module-14-capstone-eval-guardrails-release.md) | Sampling stability, guardrail 4 tầng, red-team, Global-MMLU vi, hiệu chuẩn LLM-judge | `release_dossier.json`, `MODEL_CARD.md` | Bảng tổng kết 7 mốc |
+| 15 | [module-15](module-15-production-ops-monitoring-feedback.md) | **Vận hành sau phát hành**: API FastAPI, cổng champion/challenger, kiểm thử tải p95 & số replica, drift (PSI), nhãn trễ + Cohen's κ, chaos test KillSwitch, điều kiện huấn luyện lại | API chạy thật + `ops_report.json` + runbook | Champion vs challenger (sau guardrail); tuần 1 vs tuần 2 |
 
 ## Chuỗi checkpoint (buổi sau nạp sản phẩm của buổi trước)
 ```
@@ -39,7 +41,7 @@ M00 base ──► M01 few-shot (prompt)        M04 unsloth_sft ──► M05 RA
 M02 lora_r16 ──► M03 ablation                                     │
                                          M06 sft_best ◄───────────┘
                                           ├─► M07 sft_aug (nếu thắng thì thay sft_best)
-                                          ├─► M08 sft_dpo / orpo_from_base ──► M09 grpo ──► M13 GGUF ──► M14 release
+                                          ├─► M08 sft_dpo / orpo_from_base ──► M09 grpo ──► M13 GGUF ──► M14 release ──► M15 vận hành
                                           ├─► M10 mixed_think (nhánh nghiên cứu)
                                           └─► M12 RAG đầu-cuối (dùng m12/qwen3_emb_lora)
 M11 agent: adapter độc lập từ base
@@ -102,8 +104,9 @@ os.environ["P01_RUNS"] = "/content/drive/MyDrive/p01_runs"
 | `dedup`, `synthetic` | Khử trùng lặp n-gram ký tự, kiểm toán rò rỉ, lọc câu viết lại |
 | `tools`, `retrieval`, `cot`, `llamacpp` | Agent/tool calling, BM25 + Recall/MRR, vết suy luận, client llama-server + JSON Schema |
 | `scoreboard` | Bảng điểm `leaderboard.csv` trên Drive |
+| `ops`, `service`, `traffic` | Cổng champion/challenger, p95 & số replica, PSI drift, KillSwitch, Cohen's κ · API FastAPI bọc guardrail + nhật ký kiểm toán · mô phỏng traffic/báo lỗi (Buổi 15) |
 
-**Chạy kiểm thử trên máy cá nhân (CPU, không cần GPU):**
+**Chạy kiểm thử trên máy cá nhân (CPU, không cần GPU)** — CI chạy đúng bộ này trên mỗi push/PR ([`.github/workflows/edu-tests.yml`](../.github/workflows/edu-tests.yml)):
 ```bash
 python -m venv .venv && .venv/bin/pip install -r edu/requirements-dev.txt && .venv/bin/python -m pytest edu/tests -q
 ```
@@ -125,4 +128,4 @@ Bộ test kiểm tra cả **nội dung bài học**: mọi ô Python phải đú
 | Mở rộng | `duyet/vietnamese-legal-instruct`, `th1nhng0/vietnamese-legal-documents` | CC-BY-4.0 |
 
 ## Thời lượng & phần cứng
-~55 giờ học (15 buổi × 3–4 giờ). Lượt train dài nhất: GRPO (Buổi 09) và biên dịch llama.cpp (Buổi 13). Tất cả chạy trên Colab T4 15 GB; nếu có GPU Ampere+ (L4/A100), đổi `fp16=True` thành `bf16=True`.
+~59 giờ học (16 buổi × 3–4 giờ). Lượt train dài nhất: GRPO (Buổi 09) và biên dịch llama.cpp (Buổi 13). Tất cả chạy trên Colab T4 15 GB; nếu có GPU Ampere+ (L4/A100), đổi `fp16=True` thành `bf16=True`.
