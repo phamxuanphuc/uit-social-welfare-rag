@@ -16,6 +16,7 @@ mkdir -p data/real/raw && cd data/real/raw
 B=https://huggingface.co/datasets/th1nhng0/vietnamese-legal-documents/resolve/main/data
 curl -fLO $B/metadata.parquet && curl -fLO $B/content.parquet    # ~15 MB + ~785 MB
 cd - && python -m data_pipeline.vbpl_welfare --raw data/real/raw --out data/real   # ~15 giây
+python -m data_pipeline.core_set                                            # kiểm tập lõi + xuất đoạn
 ```
 
 | File | Commit? | Nội dung |
@@ -25,6 +26,8 @@ cd - && python -m data_pipeline.vbpl_welfare --raw data/real/raw --out data/real
 | `welfare_articles.jsonl` | Không (~43 MB) | 1 dòng / đoạn: cắt theo **Điều**, Điều dài > 4.000 ký tự chia theo dòng (`part`) |
 | `manifest.csv` | Có | Danh sách văn bản, không có toàn văn |
 | `stats.json` | Có | Số liệu tổng hợp |
+| `core_set.csv` | Có | Tập văn bản lõi đã kiểm hiệu lực (soạn tay) |
+| `core_articles.jsonl` | Không | Các đoạn của tập lõi, trạng thái đã kiểm |
 
 ## Cách chọn
 
@@ -42,9 +45,18 @@ Tiêu đề chứa một trong các cụm: bảo hiểm xã hội (kể cả t�
 
 Đúng cấu trúc bài toán P01: mỗi văn bản có `region` (`Toàn quốc` hoặc tên tỉnh) để lọc kép, và `validity` (`active`/`expired`) để kiểm tra cảnh báo hết hiệu lực — trên dữ liệu thật, hơn một nửa văn bản đã hết hiệu lực.
 
+## Tập văn bản lõi đã kiểm hiệu lực (`core_set.csv`)
+
+40 văn bản trung ương làm nguồn **đáp án chuẩn** cho RAFT và đánh giá, đủ 8 nhóm: BHXH, BHXH tự nguyện, hưu trí xã hội, BHYT, BHTN, việc làm, trợ giúp xã hội, hộ nghèo. Mỗi nhóm có cả văn bản còn hiệu lực lẫn văn bản cũ đã bị thay — đúng cặp cần cho bài kiểm cảnh báo hết hiệu lực.
+
+- File soạn tay; cột `check` cho biết độ tin: `primary` (điều khoản hiệu lực của văn bản mới hơn trong kho bãi bỏ văn bản này) 13 · `secondary` (nguồn chính phủ / văn bản hợp nhất, có URL) 4 · `portal_only` (chưa kiểm, dùng trạng thái cổng) 23. Kiểm ngày **2026-11-18**.
+- `python -m data_pipeline.core_set` kiểm file (sai là dừng), in chỗ lệch cổng và xuất `core_articles.jsonl` (1.304 đoạn, không commit) với `validity` đã kiểm ghi đè cổng; trạng thái cổng giữ ở `validity_portal`.
+- **Đã phát hiện cổng sai hoặc lỗi thời ở 5 văn bản:** Luật BHXH 41/2024/QH15 vẫn còn hiệu lực (cổng ghi hết hiệu lực); NĐ 20/2021 và NĐ 76/2024 về trợ giúp xã hội **hết hiệu lực từ 05/10/2026**, thay bởi NĐ 335/2026 (cổng vẫn ghi còn hiệu lực); NĐ 176/2025 đổi mức hưu trí xã hội 500.000 → 540.000 đ từ 01/07/2026; NĐ 30/2025 hết hiệu lực một phần từ 01/01/2027. Ngoài ra tiêu đề của TT 01/2025/TT-BLĐTBXH trên cổng không khớp toàn văn.
+- **Văn bản thiếu trong kho, cần bổ sung tay trước khi sinh câu hỏi trợ giúp xã hội:** NĐ 335/2026/NĐ-CP (ban hành 21/08/2026, sau ảnh chụp).
+
 ## Giới hạn — đọc trước khi dùng làm đáp án chuẩn
 
-1. **Trạng thái hiệu lực lấy nguyên từ cổng, chưa được kiểm.** Script chỉ **gắn cờ** (`status_conflict`) chứ không sửa. 3 văn bản bị cờ, gồm *Luật Bảo hiểm xã hội 41/2024/QH15* được ghi "hết hiệu lực toàn bộ" từ 01/01/2026, chỉ 6 tháng sau khi có hiệu lực. Trước khi dùng một văn bản làm đáp án chuẩn (gold) phải đối chiếu trên vbpl.vn; với văn bản "hết hiệu lực một phần" phải xem điều nào còn hiệu lực.
+1. **Ngoài tập lõi, trạng thái hiệu lực lấy nguyên từ cổng, chưa được kiểm.** `vbpl_welfare` chỉ **gắn cờ** (`status_conflict`) chứ không sửa. Chỉ dùng `core_articles.jsonl` làm đáp án chuẩn; muốn thêm văn bản vào đáp án chuẩn thì thêm dòng vào `core_set.csv` kèm bằng chứng. Với văn bản `partial`, xem `note` để biết điều nào còn hiệu lực.
 2. **Ảnh chụp tại 2026-07-23.** Văn bản ban hành sau ngày này không có; trạng thái có thể đã đổi.
 3. **Địa danh theo thời điểm ban hành.** Văn bản trước đợt sắp xếp đơn vị hành chính 2025 mang tên tỉnh cũ (ví dụ Tỉnh Bình Phước). Muốn lọc theo địa bàn hiện hành cần bảng quy đổi tỉnh cũ → tỉnh mới.
 4. **Lọc theo tiêu đề** nên sót văn bản có nội dung an sinh mà tiêu đề không nêu, và có văn bản ít liên quan tới lao động phi chính thức (BHXH cho quân nhân, quản lý quỹ...). Dùng `topics` và `loai_van_ban` để lọc tiếp.
