@@ -4,3 +4,5 @@ pytest>=8
 pyflakes>=3.2
 torch
 transformers==5.17.0
+fastapi==0.162.0
+httpx==0.28.1
