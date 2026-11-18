@@ -98,8 +98,10 @@ from google.colab import drive
 drive.mount("/content/drive")
 os.environ["P01_RUNS"] = "/content/drive/MyDrive/p01_runs"  # adapter + bảng điểm sống sót khi Colab ngắt
 import p01kit; print("p01kit", p01kit.__version__, "| model:", p01kit.MODEL_ID)
+from p01kit.colab import check_env; check_env()   # đúng bản ghim? torch trong khoảng unsloth hỗ trợ? có GPU?
 ```
-- 📌 **Kết quả nên thấy:** `p01kit 2.0.0 | model: Qwen/Qwen3-1.7B`.
+- 📌 **Kết quả nên thấy:** `p01kit 2.0.0 | model: Qwen/Qwen3-1.7B`, dòng `GPU: {'name': 'Tesla T4', ...}` và `✅ Môi trường khớp bản ghim`.
+- ⚠️ Thấy `⚠️ transformers: đang là ..., bản ghim là 5.17.0` → bạn quên khởi động lại runtime sau Ô 0a. Thấy `torch ...: ngoài khoảng unsloth hỗ trợ` → Colab vừa đổi bản `torch` mặc định; báo cho nhóm để cập nhật bộ ghim, đừng tự nâng/hạ từng gói.
 
 ### Ô 1 (4 dòng) — Kiểm tra GPU
 ```python

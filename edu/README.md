@@ -77,6 +77,7 @@ import os, sys
 sys.path.insert(0, "/content/uit-social-welfare-rag/edu")
 from google.colab import drive; drive.mount("/content/drive")
 os.environ["P01_RUNS"] = "/content/drive/MyDrive/p01_runs"
+from p01kit.colab import check_env; check_env()   # cảnh báo nếu sai bản ghim / torch ngoài khoảng / không có GPU
 ```
 *Cách B (không dùng GitHub):* tải thư mục `edu/` lên `MyDrive/p01/edu`, rồi `sys.path.insert(0, "/content/drive/MyDrive/p01/edu")`.
 
