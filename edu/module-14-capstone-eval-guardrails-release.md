@@ -8,6 +8,13 @@
 | **Chỉ số đo** | 4 ngưỡng chốt trước · mean ± std 3 seed · tỉ lệ chặn red-team · độ chính xác MCQ (base vs final) · độ đồng thuận judge |
 | **Chế độ code** | 🧩 Khối gộp |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Báo cáo đánh giá trung thực: greedy + khoảng tin cậy + độ ổn định sampling.
+2. Bọc guardrail 4 tầng, chạy red-team và kiểm tra quên kiến thức.
+3. Lập bảng hành trình toàn khóa, Release Dossier và Model Card truy vết được.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Bảng hành trình (`journey`) từ `M00` đến `M14` trên cùng test; mọi ngưỡng chốt trước ✅ hoặc có giải trình; `release_dossier.json` có hash dữ liệu; trả lời trôi chảy 7 câu hỏi tổng hợp.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -17,6 +24,8 @@
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Guardrail là **lan can cầu**: không làm xe chạy nhanh hơn, nhưng giữ xe không rơi xuống sông khi tài xế (mô hình) sơ ý. Red-team là **thuê người cố tình phá** trước khi kẻ xấu làm. Release Dossier là **hồ sơ bệnh án**: ai đọc cũng truy được mỗi con số đến từ dữ liệu và mô hình nào.
 
 ### 1.1. Ngưỡng chốt trước & cổng phát hành (release gate)
 | Chỉ số | Ngưỡng | Đo bằng |
@@ -251,8 +260,13 @@ print(card[:1200])
 ## 3. So sánh hiệu quả — Bảng tổng kết toàn khóa
 
 ```python
+from p01kit.compare import compare_runs, journey
+journey([("M00", "base-zero-shot"), ("M01", "base-3-shot"), ("M06", "sft_best"), ("M08", "sft_dpo"),
+         ("M09", "grpo"), ("M13", "gguf-Q4_K_M-imat"), ("M14", "final+guardrail")], test)
+rep = compare_runs(("M00", "base-zero-shot"), ("M14", "final+guardrail"), test)
 scoreboard.show()
 ```
+- **Giải thích:** `journey` chấm lại **output đã lưu** của từng mốc bằng cùng một bộ chấm, trên cùng 100 câu, kèm p-value McNemar so với mốc ngay trước — bạn thấy bước nào thật sự mang lại cải thiện. Bỏ mốc bạn không chạy (ví dụ thay `M08/sft_dpo` bằng `M07/sft_aug` nếu đó là nhánh bạn chọn). `compare_runs` từ `M00` đến `M14` là **trang đầu tiên** của báo cáo đồ án: trước fine-tune → hệ thống phát hành, kèm ví dụ cụ thể.
 | Mốc | Mô hình | refusal_acc | citation_precision | expired_recall | fairness_gap | strict_acc | acc_unseen_doc |
 |---|---|---|---|---|---|---|---|
 | 1 | Base zero-shot (M00) | | | | | | |

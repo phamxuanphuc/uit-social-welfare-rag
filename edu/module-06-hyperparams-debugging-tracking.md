@@ -8,6 +8,13 @@
 | **Chỉ số đo** | `eval_loss` theo bước · `grad_norm` · token/giây · VRAM đỉnh · 8 chỉ số P01 trên test (chỉ đo **1 lần** cho mô hình cuối) |
 | **Chế độ code** | 🧩 Khối gộp |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Quét learning rate và chọn trên **val**, không bao giờ trên test.
+2. Tự gây rồi sửa OOM, NaN, phân kỳ, overfit — biết đọc log để chẩn đoán.
+3. Train `sft_best`, đo test **đúng một lần**, có báo cáo `base → sft_best` cho đồ án.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): `selection.json` ghi LR/epoch đã chọn kèm toàn bộ kết quả quét; test chỉ đo một lần; báo cáo `M00 → M06` đã lưu vào báo cáo đồ án; bạn sửa được ít nhất 3 lỗi trong phòng lab debug.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -19,6 +26,8 @@ Và một nguyên tắc mà nhiều người vi phạm mà không biết: **ch�
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Learning rate là **độ dài bước chân khi xuống dốc trong sương mù**: bước dài quá thì trượt ngã (phân kỳ, NaN), ngắn quá thì mãi không tới. Tập val là **bài thi thử** — thi bao nhiêu lần cũng được; tập test là **thi thật** — chỉ thi một lần, nhìn điểm rồi sửa bài là gian lận.
 
 ### 1.1. Thứ tự ưu tiên khi tinh chỉnh (LoRA, dữ liệu vài trăm mẫu)
 | Ưu tiên | Siêu tham số | Dải hợp lý | Dấu hiệu sai |

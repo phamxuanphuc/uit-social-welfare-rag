@@ -8,6 +8,14 @@
 | **Chỉ số đo** | Số câu trùng giữa train/test ở 2 cấp độ · 8 chỉ số P01 · p-value McNemar · chi phí token của few-shot |
 | **Chế độ code** | 🔬 Ô siêu nhỏ, giải thích từng dòng |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Giải thích được cách dữ liệu RAFT được sinh và vì sao phải **chia theo nhóm kịch bản** để chống rò rỉ.
+2. Dùng bộ chấm 8 chỉ số và đọc đúng khoảng tin cậy của tập test 100 câu.
+3. Đọc số liệu **thật** về hiệu lực văn bản pháp luật Việt Nam (171.556 văn bản) và chỉ ra lỗi trong metadata cào tự động.
+4. Đo few-shot và dùng McNemar để biết cải thiện có thật hay chỉ là nhiễu.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Đáp án hoàn hảo được chấm 1,0 ở mọi chỉ số; tái lập đúng số 171.556 văn bản / 52,9% hết hiệu lực toàn bộ; báo cáo `M00 → M01/base-3-shot` có p-value.
+
 ---
 
 ## 0. Bức tranh lớn — "80% công việc là dữ liệu và đánh giá"
@@ -22,6 +30,8 @@ Buổi này trả lời cả 3 câu, rồi thử giải bài toán **chỉ bằn
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Chia tập theo nhóm giống **ra đề thi không được có câu chỉ đổi vài chữ so với bài tập về nhà** — nếu không, điểm cao chỉ chứng tỏ học thuộc. Khoảng tin cậy là câu "điểm 70 ± 9": thi có 100 câu thì chênh 3 điểm chưa nói lên gì. McNemar chỉ đếm **những câu hai thí sinh làm khác nhau** — câu cả hai cùng đúng hay cùng sai không cho thông tin.
 
 ### 1.1. Bộ dữ liệu P01 được thiết kế thế nào (đọc [`p01kit/data.py`](p01kit/data.py))
 - **Kho văn bản giả lập:** 23 văn bản ([`data/policies.json`](data/policies.json)) thuộc 11 chủ đề an sinh, 3 địa bàn + cấp Toàn quốc; 5 văn bản **đã hết hiệu lực**, trong đó 2 văn bản đã có bản mới thay thế.

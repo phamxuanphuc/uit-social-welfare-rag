@@ -8,6 +8,13 @@
 | **Chỉ số đo** | `reward` & từng thành phần · `frac_reward_zero_std` · độ dài completion · 8 chỉ số P01 · McNemar |
 | **Chế độ code** | 🧩 Khối gộp |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Viết và kiểm thử 3 hàm thưởng **trước** khi train.
+2. Cấu hình GRPO đúng ràng buộc batch và chạy được trên T4.
+3. Đọc đường thưởng, phát hiện reward hacking, so `expired_recall` / `false_expired_rate` trước–sau.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Đáp án hoàn hảo nhận điểm thưởng tối đa; nhóm lỗi `khong_canh_bao_het_han` giảm mà `false_expired_rate` không tăng; checkpoint trên Drive và chạy tiếp được sau khi ngắt.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -19,6 +26,8 @@ Mục tiêu nghiệp vụ cụ thể: đẩy **`expired_recall` → 100%** (ngư
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** GRPO giống **cho học sinh làm 4 bài cùng một đề, máy chấm tự động, khen bài tốt hơn trung bình nhóm và chê bài kém hơn**. Reward hacking là khi học sinh phát hiện máy chấm chỉ đếm chữ "cảnh báo" nên câu nào cũng ghi "cảnh báo" — vì vậy phần thưởng phạt cả hai chiều và luôn chấm lại bằng bộ chấm đầy đủ.
 
 ### 1.1. GRPO trong 4 bước
 Với mỗi prompt *x*:

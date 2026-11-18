@@ -8,6 +8,13 @@
 | **Chỉ số đo** | `answer_acc` trên câu trả lời được · `refusal_acc` · tỉ lệ *over-refusal* / *under-refusal* · tỉ lệ chọn nhầm văn bản nhiễu |
 | **Chế độ code** | 🧩 **Khối gộp** — học viên đã thành thạo từng bước, giờ tập trung vào thiết kế thí nghiệm |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Dựng dữ liệu RAFT với văn bản nhiễu **khó** và một tỉ lệ câu phải từ chối.
+2. So 3 cấu hình với **cùng ngân sách bước** để so sánh công bằng.
+3. Phân loại lỗi thành ma trận thay vì chỉ nhìn một con số tổng.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): 3 cấu hình trên bảng điểm với cùng `max_steps=51`; báo cáo `A → C` cho thấy nhóm lỗi `le_ra_tu_choi` thay đổi thế nào; giải thích được đánh đổi "từ chối nhầm".
+
 ---
 
 ## 0. Bức tranh lớn
@@ -19,6 +26,8 @@ RAFT (Zhang et al., 2024) giải quyết bằng 2 cơ chế: (1) **trộn văn b
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** RAFT giống **bài đọc hiểu có cả đoạn văn gây nhiễu**, và có câu hỏi "không có trong bài" để học sinh học cách nói "không biết" thay vì bịa. Ngân sách bước cố định giống **cho mọi thí sinh cùng một thời gian làm bài**.
 
 ### 1.1. Ba cấu hình so sánh
 | Mã | Dữ liệu train | Ngữ cảnh | Có câu phải từ chối? |

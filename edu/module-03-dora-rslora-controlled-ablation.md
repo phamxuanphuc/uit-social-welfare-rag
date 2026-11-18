@@ -8,6 +8,13 @@
 | **Chỉ số đo** | `scaling` thực tế trong mô hình · số tham số · phút/epoch · VRAM đỉnh · `strict_acc` · McNemar so với M02 |
 | **Chế độ code** | 🔬 Ô nhỏ (≤ 12 dòng); bắt đầu đóng gói lặp lại thành hàm |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Giải thích DoRA và rsLoRA bằng **số đo** (`scaling`), không chỉ bằng công thức.
+2. Thiết kế ablation **chỉ đổi một biến**, giữ nguyên mọi thứ khác.
+3. Kết luận đúng khi chênh lệch nằm trong nhiễu: chọn phương án rẻ hơn.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): 4 biến thể trên bảng điểm với số tham số khớp dự đoán ở Ô 2; báo cáo trước → sau có McNemar; kết luận chọn biến thể kèm lý do chi phí/thời gian.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -17,6 +24,8 @@ Nhà tuyển dụng không hỏi "DoRA là gì" để nghe định nghĩa — h�
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** DoRA tách việc chỉnh **độ lớn** (vặn to nhỏ) khỏi việc chỉnh **hướng** (xoay) của mỗi cột trọng số — như chỉnh âm lượng và chỉnh kênh bằng hai núm riêng. rsLoRA: khi dán **nhiều** giấy ghi chú hơn (rank lớn) phải giảm độ đậm từng tờ cho đúng tỉ lệ, nếu không ghi chú lấn át cả sách. Ablation giống **nấu cùng món, mỗi lần chỉ đổi một gia vị**.
 
 ### 1.1. DoRA — tách "độ lớn" và "hướng"
 - Mọi cột trọng số có thể viết `W = m · V/‖V‖`: **m** là độ lớn (vô hướng/cột), **V/‖V‖** là hướng (vector đơn vị).

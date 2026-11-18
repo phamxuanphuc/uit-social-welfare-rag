@@ -8,6 +8,14 @@
 | **Chỉ số đo** | VRAM thực tế vs. ước tính · số token tiếng Việt vs. tiếng Anh · thời gian sinh thinking vs. non-thinking · 8 chỉ số P01 |
 | **Chế độ code** | 🔬 **Ô siêu nhỏ** (≤ 10 dòng), mỗi ô có *Mục tiêu → Code → Giải thích → 📌 Kết quả nên thấy → ⚠️ Lỗi hay gặp* |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Tính tay số tham số (≈1,72 tỷ) và bộ nhớ FP16/NF4 của Qwen3-1.7B, rồi đối chiếu với VRAM đo thật.
+2. Đo được thinking vs non-thinking bằng số token và thời gian, không đoán.
+3. Viết bộ sinh theo lô (đệm trái) và đo mức tăng tốc so với hỏi từng câu.
+4. Có điểm **baseline** của mô hình gốc trên 100 câu test — mốc "trước" cho mọi phép so sánh sau này.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): `check_env()` báo ✅; bảng điểm có dòng `M00/base-zero-shot` và file `p01_runs/outputs/M00__base-zero-shot.json` tồn tại; bạn giải thích được vì sao VRAM đo khác ước tính.
+
 ---
 
 ## 0. Bức tranh lớn — Vì sao doanh nghiệp bắt đầu bằng Baseline?
@@ -23,6 +31,8 @@
 ---
 
 ## 1. Lý thuyết (Feynman) — 4 điều phải hiểu trước khi chạm vào GPU
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Mô hình ngôn ngữ là **máy đoán chữ tiếp theo**. "1,7 tỷ tham số" là 1,7 tỷ núm vặn đã được vặn sẵn trong lúc tiền huấn luyện. NF4 nén mỗi núm từ 16 bit xuống 4 bit — như nén ảnh: nhẹ đi 4 lần, mờ đi một chút. **Baseline** là cân sức khỏe trước khi tập gym: không có số "trước" thì không chứng minh được tập có tác dụng.
 
 ### 1.1. `Qwen/Qwen3-1.7B` không phải "mô hình base"
 - Trên Hugging Face có **2 bản**: `Qwen/Qwen3-1.7B-Base` (chỉ tiền huấn luyện, biết đoán chữ nhưng không biết hội thoại) và `Qwen/Qwen3-1.7B` (đã **post-train**: SFT + RL, biết chat, biết gọi tool, có 2 chế độ thinking/non-thinking).

@@ -8,6 +8,13 @@
 | **Chỉ số đo** | `rewards/margins`, `rewards/accuracies` · `refusal_acc`, `expired_recall`, `strict_acc` · McNemar · phút train |
 | **Chế độ code** | 🧩 Khối gộp |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Khai thác lỗi **on-policy** của chính mô hình SFT.
+2. Dựng cặp (chosen, rejected) ưu tiên lỗi nguy hiểm trước.
+3. Train DPO (adapter `ref`) và ORPO, so 4 mô hình trên cùng test.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Log DPO có `margin` dương và tăng; báo cáo `sft_best → sft_dpo` cho thấy các loại lỗi dùng làm *rejected* giảm; giải thích được on-policy vs off-policy.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -19,6 +26,8 @@ SFT dạy mô hình **bắt chước** câu trả lời đúng, nhưng không ba
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** DPO giống **cho học sinh xem hai bài của chính mình — một bài tốt, một bài dở — rồi dặn "làm giống bài tốt hơn"**. On-policy nghĩa là bài dở lấy từ chính học sinh đó, nên đúng chỗ yếu của nó. ORPO gộp hai bước: vừa học lời giải mẫu vừa học phân biệt tốt/dở.
 
 ### 1.1. DPO — Direct Preference Optimization
 Mất mát cho cặp (prompt x, chosen y_w, rejected y_l):

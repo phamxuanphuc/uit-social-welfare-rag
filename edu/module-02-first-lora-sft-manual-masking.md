@@ -8,6 +8,14 @@
 | **Chỉ số đo** | Số tham số train được (khớp công thức) · train/val loss · 8 chỉ số P01 · thời gian & VRAM đỉnh |
 | **Chế độ code** | 🔬 Ô siêu nhỏ — đây là buổi "mở hộp đen": không dùng thư viện fine-tune cấp cao |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Tự viết hàm **che nhãn** (loss masking) và kiểm tra tận mắt token nào được chấm điểm.
+2. Tính tay đúng 17.432.576 tham số LoRA r16 và xác minh bằng code.
+3. Train QLoRA đầu tiên, lưu adapter, nạp lại và tái tạo đúng kết quả.
+4. Đọc báo cáo **trước → sau** đầu tiên: câu nào được sửa, câu nào bị làm hỏng.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Mặt nạ của bạn khớp `p01kit.sft`; số tham số học được đúng 17.432.576; báo cáo `M00 → M02` có ví dụ cụ thể; adapter nạp lại cho đúng output cũ (Ô 13).
+
 ---
 
 ## 0. Bức tranh lớn
@@ -22,6 +30,8 @@ Từ Buổi 04, các thư viện (TRL, Unsloth) sẽ làm hộ những việc n�
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** SFT giống **cho học sinh xem lời giải mẫu**, và chỉ chấm phần lời giải, không chấm phần chép lại đề — đó là che nhãn. LoRA là **dán giấy ghi chú lên lề sách** thay vì in lại cả cuốn: sách gốc giữ nguyên, chỉ học thêm vài trang ghi chú. QLoRA: sách in khổ nhỏ (4 bit) cho nhẹ, còn giấy ghi chú viết rõ ràng (16/32 bit).
 
 ### 1.1. SFT = dự đoán token kế tiếp, nhưng chỉ chấm điểm phần trả lời
 Với chuỗi `x₁ … x_T`, mất mát cross-entropy là `L = −(1/|S|) Σ_{t∈S} log p(x_t | x_<t)`, trong đó **S** là tập vị trí được tính điểm.

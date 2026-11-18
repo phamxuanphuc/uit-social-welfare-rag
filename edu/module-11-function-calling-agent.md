@@ -8,6 +8,13 @@
 | **Chỉ số đo** | % gọi tool đúng (tên, địa bàn, chủ đề) · % từ chối đúng câu ngoài phạm vi · % trả lời cuối đúng mã văn bản & cảnh báo hết hạn |
 | **Chế độ code** | 🧩 Khối gộp |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Hiểu định dạng tool của Qwen3 và che nhãn cho hội thoại nhiều lượt có tool.
+2. Train adapter agent và chạy agent thật end-to-end 2 lượt.
+3. So agent với baseline từ khóa (0,885) và phân loại 3 loại lỗi agent.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Agent chạy end-to-end trên toàn bộ test; bạn giải thích được vì sao agent thắng hoặc chưa thắng baseline từ khóa, kèm ví dụ lỗi cụ thể.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -19,6 +26,8 @@ Một câu hỏi kiểm tra tư duy kỹ sư: *có cần LLM cho việc hiểu c
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Function calling là mô hình **không tự tra sổ** mà **viết phiếu yêu cầu** (JSON) để hệ thống tra giúp, rồi đọc kết quả trả về. Che nhãn nhiều lượt: chỉ chấm phần **mô hình viết**, không chấm phần database trả lời.
 
 ### 1.1. Định dạng tool của Qwen3 (kiểu Hermes)
 - Truyền danh sách hàm Python vào `apply_chat_template(..., tools=TOOLS)`. Transformers đọc **type hint + docstring kiểu Google** (`Args:`) để sinh JSON Schema; thiếu mô tả tham số → lỗi `DocstringParsingException` (lỗi đã gặp ở giáo trình cũ).

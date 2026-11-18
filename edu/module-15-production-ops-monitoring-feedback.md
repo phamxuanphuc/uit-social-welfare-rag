@@ -8,6 +8,13 @@
 | **Chỉ số đo** | Quyết định cổng & p-value McNemar · p50/p95/p99 (s) · request/s · PSI từng đặc trưng · độ chính xác hệ thống theo tuần · tỉ lệ báo lỗi · Cohen's κ |
 | **Chế độ code** | 🧩 Khối gộp — phần lớn logic nằm trong `p01kit/ops.py`, `p01kit/service.py`, `p01kit/traffic.py` (đã có test CPU) |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Ra quyết định phát hành champion vs challenger có lý do và p-value.
+2. Dựng API thật, kiểm thử tải p50/p95 và tính số replica.
+3. Giám sát drift, xử lý nhãn trễ (đo κ), chaos test KillSwitch, quyết định khi nào huấn luyện lại.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Có quyết định `promote`/`hold`/`reject` kèm lý do; bảng tải p95; báo cáo drift 2 tuần chỉ ra tầng gây lỗi; `ops_report.json` và runbook một trang.
+
 > ⚠️ Traffic ở buổi này là **mô phỏng tất định** từ tập val/test (`p01kit/traffic.py`) vì lớp học chưa có người dùng thật. Văn bản chính sách vẫn là **giả lập**.
 
 ---
@@ -29,6 +36,8 @@ Buổi này đi trọn vòng đời đó trên chính hệ thống P01:
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Champion/challenger giống **cầu thủ dự bị phải đá tốt hơn cầu thủ chính trong buổi tập mới được vào sân**. Drift là **khách hàng đổi thói quen** (ví dụ gõ không dấu) — cửa hàng phải nhận ra trước khi doanh thu giảm. KillSwitch là **cầu dao điện**: thấy chập là ngắt ngay, sửa xong mới bật lại.
 
 ### 1.1. Champion / challenger — vì sao "qua ngưỡng" chưa đủ để phát hành
 - **Champion** = mô hình đang phục vụ; **challenger** = ứng viên mới. Ngưỡng chốt trước (Buổi 14) là **sàn tuyệt đối**; nhưng một mô hình qua sàn vẫn có thể **kém hơn** bản đang chạy ở một nhóm người dùng.

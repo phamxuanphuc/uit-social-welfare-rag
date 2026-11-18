@@ -8,6 +8,14 @@
 | **Chỉ số đo** | giây/bước, VRAM đỉnh · `acc_formal`, `acc_colloquial`, `fairness_gap` · McNemar |
 | **Chế độ code** | 🔬 Ô nhỏ — **buổi cuối** của giai đoạn ô siêu nhỏ; từ Buổi 05 code được gộp thành khối lớn |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Dùng Unsloth + TRL `SFTTrainer` và **kiểm tra lại** mặt nạ mà thư viện tạo ra.
+2. Đo tốc độ và VRAM của HF vs Unsloth trên cùng cấu hình.
+3. Thử NEFTune và đọc tác động ở câu hỏi giọng đời thường.
+4. Lập ma trận công bằng 2×2: giọng chuẩn vs đời thường.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Unsloth ≈ HF về chất lượng (p lớn) nhưng nhanh hơn, có số đo; `fairness_gap` của bạn được ghi vào bảng và so với ngưỡng 0,10.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -19,6 +27,8 @@
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Unsloth là **cùng công thức nấu nhưng bếp nhanh hơn** — món ăn (chất lượng) phải giống nhau, chỉ thời gian khác. NEFTune giống **luyện nghe trong phòng hơi ồn** để ra đường không bỡ ngỡ. Công bằng ở P01 nghĩa là câu "tui chạy xe ôm té gãy tay" phải được trả lời tốt như câu "lao động phi chính thức bị tai nạn lao động".
 
 ### 1.1. Unsloth tăng tốc bằng cách nào?
 - **Kernel Triton viết tay** cho RoPE, RMSNorm, SwiGLU và phép nhân LoRA — gộp nhiều phép tính thành 1 lần đọc/ghi bộ nhớ.

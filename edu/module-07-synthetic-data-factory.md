@@ -8,6 +8,13 @@
 | **Chỉ số đo** | Tỉ lệ giữ lại qua từng bộ lọc · lý do loại · số cặp nghi rò rỉ · `acc_colloquial`, `fairness_gap`, `acc_unseen_doc` · McNemar |
 | **Chế độ code** | 🧩 Khối gộp |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Sinh dữ liệu tổng hợp bằng chính Qwen3 và lọc qua phễu 4 tầng.
+2. Khử trùng lặp gần và kiểm toán rò rỉ trước khi train.
+3. Viết data card và quyết định giữ/bỏ dữ liệu dựa trên lát cắt, không dựa vào cảm giác.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Data card có số mẫu còn lại sau mỗi tầng lọc; 0 rò rỉ sang test; báo cáo `sft_best → sft_aug` đọc theo `style=colloquial` và có quyết định rõ ràng.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -19,6 +26,8 @@ Thiết kế an toàn của buổi này: **mô hình chỉ viết lại câu h�
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Dữ liệu tổng hợp giống **nhờ một người viết lại câu hỏi bằng nhiều giọng khác nhau**. Phễu lọc là **sàng gạo**: không sàng thì sạn (câu sai nghĩa, câu trùng) lẫn vào cơm — và mô hình học luôn cả sạn.
 
 ### 1.1. Các kiểu dữ liệu tổng hợp
 | Kiểu | Ví dụ | Rủi ro chính |

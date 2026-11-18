@@ -8,6 +8,13 @@
 | **Chỉ số đo** | MB · 8 chỉ số P01 · `json_valid` · TTFT (s) · token/s (prefill & sinh) |
 | **Chế độ code** | 🧩 Khối gộp (Python + shell) |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Merge adapter đúng cách (base FP16 sạch, lượng tử một lần).
+2. Tạo GGUF nhiều mức + imatrix thật và đo cái giá chất lượng của từng mức.
+3. So constrained decoding (JSON Schema) với sinh tự do; đo TTFT và token/s trên CPU.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): `quant_report.json` trên Drive; chọn mức lượng tử nhỏ nhất vẫn đạt ngưỡng (kết hợp guardrail); báo cáo `M09/grpo → M13/gguf-Q4_K_M-imat` cho thấy câu nào bị Q4 làm hỏng; có số độ trễ CPU 2 luồng.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -17,6 +24,8 @@ Một mô hình chỉ có giá trị khi **chạy được ở nơi người dù
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Lượng tử hóa là **làm tròn số** (3,14159 → 3,14): nhẹ hơn nhiều, sai một chút. imatrix là **biết cột nào quan trọng thì làm tròn cẩn thận cột đó**. Constrained decoding giống **điền vào biểu mẫu có sẵn ô** — không thể viết sai định dạng, nhưng vẫn có thể điền sai nội dung.
 
 ### 1.1. Merge đúng cách
 - **Sai:** gọi `merge_and_unload()` trên mô hình đang nạp 4-bit rồi lưu — cộng ΔW (FP16) vào trọng số **đã bị làm tròn 4-bit** rồi lượng tử lần nữa → sai số kép.

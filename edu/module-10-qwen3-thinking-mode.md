@@ -8,6 +8,13 @@
 | **Chỉ số đo** | % output có suy luận thật · số token sinh/câu · giây/câu · `answer_acc`, `acc_unseen_doc`, `expired_recall` ở cả 2 chế độ |
 | **Chế độ code** | 🧩 Khối gộp |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. Đo thinking vs non-thinking theo ba trục: độ chính xác, số token, độ trễ.
+2. Phát hiện "sụp đổ thinking" sau khi SFT chỉ với dữ liệu non-thinking.
+3. Train mô hình trộn 2 chế độ và dựng bộ định tuyến "chỉ nghĩ khi cần".
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Bảng 3 mô hình × 2 chế độ có số token và giây/câu; quyết định bật/tắt thinking cho P01 kèm số độ trễ, so với ngân sách độ trễ CPU của Buổi 13.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -19,6 +26,8 @@ Rủi ro thực tế: từ Buổi 02 đến 09 ta chỉ train dữ liệu non-th
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Thinking giống **nháp ra giấy trước khi trả lời**: đúng hơn ở câu khó nhưng tốn giấy và thời gian. Bộ định tuyến là **chỉ lấy giấy nháp khi thấy câu khó**.
 
 ### 1.1. Qwen3 được huấn luyện 2 chế độ thế nào (theo technical report)
 1. *Long-CoT cold start* — SFT trên chuỗi suy luận dài.
