@@ -64,6 +64,7 @@ from p01kit.prompts import to_prompt_completion
 from p01kit.infer import evaluate
 from p01kit.modeling import adapter_path, free
 from p01kit import scoreboard
+from p01kit.runs import resumable, resume_point
 train, val, test = (load_split(s) for s in ("train", "val", "test"))
 TARGETS = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
 
@@ -90,9 +91,8 @@ ds_val = Dataset.from_list([to_prompt_completion(tok, r) for r in val])
 
 ### Khối 2 — Quét learning rate, chọn trên VAL
 ```python
-sweep = {}
-for lr in (5e-5, 2e-4, 5e-4):
-    name = f"lr{lr:.0e}"
+@resumable("m06")                  # mỗi LR xong là lưu lên Drive → Colab ngắt thì chỉ chạy lại LR còn thiếu
+def sweep_one(name, lr):
     model, tok = fresh_model()
     tr = SFTTrainer(model=model, processing_class=tok, train_dataset=ds_train, eval_dataset=ds_val,
                     args=make_cfg(name, learning_rate=lr))
@@ -100,12 +100,18 @@ for lr in (5e-5, 2e-4, 5e-4):
     hist = tr.state.log_history
     FastLanguageModel.for_inference(model)
     v = evaluate(model, tok, val, batch_size=8)["summary"]
-    sweep[name] = {"eval_loss": [round(h["eval_loss"], 4) for h in hist if "eval_loss" in h],
-                   "max_grad_norm": round(max(h.get("grad_norm", 0) for h in hist), 2),
-                   "val_strict": v["strict_acc"], "val_answer": v["answer_acc"],
-                   "tok_per_s": round(sum(len(x) for x in tr.train_dataset["input_ids"]) * 3 / out.metrics["train_runtime"])}
-    print(name, sweep[name])
+    stats = {"eval_loss": [round(h["eval_loss"], 4) for h in hist if "eval_loss" in h],
+             "max_grad_norm": round(max(h.get("grad_norm", 0) for h in hist), 2),
+             "val_strict": v["strict_acc"], "val_answer": v["answer_acc"],
+             "tok_per_s": round(sum(len(x) for x in tr.train_dataset["input_ids"]) * 3 / out.metrics["train_runtime"])}
     del model, tr; free()
+    return stats
+
+sweep = {}
+for lr in (5e-5, 2e-4, 5e-4):
+    name = f"lr{lr:.0e}"
+    sweep[name] = sweep_one(name, lr)
+    print(name, sweep[name])
 ```
 - **Giải thích:** `eval_loss` ghi ở các bước 17/34/51 (≈ hết epoch 1/2/3) → vừa chọn LR vừa chọn số epoch. `val_strict` trên 34 câu chỉ là tín hiệu **thô**; kết hợp với `eval_loss` (mượt hơn vì tính trên mọi token).
 - 📌 **Kết quả nên thấy:** `5e-5` thường có `eval_loss` cao nhất (học chậm); `5e-4` có thể có `max_grad_norm` lớn và `eval_loss` đi lên ở epoch 3 (overfit/không ổn định). Chọn cấu hình có `eval_loss` thấp nhất **và** `val_strict` không kém.
@@ -189,8 +195,9 @@ del model, tr; free()
 lr = float(BEST_LR.replace("lr", ""))
 model, tok = fresh_model()
 tr = SFTTrainer(model=model, processing_class=tok, train_dataset=ds_train, eval_dataset=ds_val,
-                args=make_cfg("sft_best", learning_rate=lr, num_train_epochs=BEST_EPOCHS, logging_steps=5))
-tr.train()
+                args=make_cfg("sft_best", learning_rate=lr, num_train_epochs=BEST_EPOCHS, logging_steps=5,
+                              save_strategy="steps", save_steps=17, save_total_limit=1))   # checkpoint mỗi epoch lên Drive
+tr.train(resume_from_checkpoint=resume_point(adapter_path("m06", "ckpt_sft_best")))     # None ở lần đầu
 model.save_pretrained(adapter_path("m06", "sft_best")); tok.save_pretrained(adapter_path("m06", "sft_best"))
 json.dump({"lr": lr, "epochs": BEST_EPOCHS, "sweep": sweep}, open(adapter_path("m06", "sft_best") / "selection.json", "w"), indent=2)
 FastLanguageModel.for_inference(model)

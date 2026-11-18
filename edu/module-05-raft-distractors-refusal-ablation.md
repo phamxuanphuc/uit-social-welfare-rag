@@ -65,6 +65,7 @@ from p01kit.prompts import to_prompt_completion
 from p01kit.infer import evaluate
 from p01kit.modeling import adapter_path, free
 from p01kit import scoreboard
+from p01kit.runs import resumable
 
 corpus = load_corpus()
 train, val, test = (load_split(s) for s in ("train", "val", "test"))
@@ -77,6 +78,7 @@ def fresh_model():
                                          target_modules=TARGETS, use_gradient_checkpointing="unsloth")
     return m, t
 
+@resumable("m05")                 # mỗi cấu hình xong là lưu kết quả lên Drive; chạy lại ô chỉ train phần còn thiếu
 def train_sft(name, rows, module="m05", max_steps=51, lr=2e-4, neftune=None, eval_rows=val):
     model, tok = fresh_model()
     ds = Dataset.from_list([to_prompt_completion(tok, r) for r in rows])

@@ -67,6 +67,7 @@ from p01kit.data import load_split
 from p01kit.prompts import build_messages
 from p01kit.rewards import REWARD_FUNCS, reward_format, reward_citation, reward_expired
 from p01kit.modeling import adapter_path, free
+from p01kit.runs import resume_point
 train, val, test = (load_split(s) for s in ("train", "val", "test"))
 START = adapter_path("m08", "sft_dpo")       # hoặc adapter_path("m06", "sft_best") — theo kết luận Buổi 08
 
@@ -108,7 +109,8 @@ cfg = GRPOConfig(
     max_completion_length=p01kit.MAX_NEW_TOKENS, temperature=0.9, max_steps=64,
     reward_weights=[0.5, 1.0, 1.0], beta=0.0, mask_truncated_completions=True,
     chat_template_kwargs={"enable_thinking": False}, log_completions=True,
-    logging_steps=1, save_strategy="no", fp16=True, report_to=os.environ.get("REPORT_TO", "none"))
+    logging_steps=1, save_strategy="steps", save_steps=16, save_total_limit=1,     # checkpoint lên Drive mỗi 16 bước
+    fp16=True, report_to=os.environ.get("REPORT_TO", "none"))
 print("generation_batch_size =", cfg.generation_batch_size, "→", cfg.generation_batch_size // cfg.num_generations, "prompt/lần sinh")
 ```
 - 📌 **Kết quả nên thấy:** `generation_batch_size = 8 → 2 prompt/lần sinh`; 64 bước × 2 prompt = **128 prompt** = đúng 1 lượt qua `ds_rl`.
@@ -117,7 +119,7 @@ print("generation_batch_size =", cfg.generation_batch_size, "→", cfg.generatio
 ### Khối 4 — Train GRPO & theo dõi
 ```python
 trainer = GRPOTrainer(model=model, processing_class=tok, reward_funcs=REWARD_FUNCS, args=cfg, train_dataset=ds_rl)
-t0 = time.perf_counter(); trainer.train(); grpo_min = (time.perf_counter() - t0) / 60
+t0 = time.perf_counter(); trainer.train(resume_from_checkpoint=resume_point(cfg.output_dir)); grpo_min = (time.perf_counter() - t0) / 60
 model.save_pretrained(adapter_path("m09", "grpo")); tok.save_pretrained(adapter_path("m09", "grpo"))
 hist = [h for h in trainer.state.log_history if "reward" in h]
 keys = [k for k in hist[0] if k.startswith("rewards/") and k.endswith("/mean")] + ["reward", "frac_reward_zero_std"]
@@ -127,6 +129,7 @@ print(f"GRPO: {grpo_min:.1f} phút")
 ```
 - 📌 **Đọc log:** `reward` trung bình nên **tăng dần** (có nhiễu); `rewards/reward_expired/mean` là thứ ta quan tâm nhất; `frac_reward_zero_std` cao (> 0,7) nghĩa là phần lớn nhóm không mang tín hiệu → tăng `temperature` hoặc chọn prompt khó hơn.
 - ⚠️ Tên khóa log có thể khác nhẹ giữa các phiên bản — in `hist[0].keys()` để xem tên thật.
+- 💡 **Colab miễn phí:** GRPO là lượt train dài nhất khóa. Checkpoint (adapter + trạng thái optimizer, cỡ 100–200 MB, chỉ giữ 1 bản) được ghi vào `p01_runs/m09/ckpt` mỗi 16 bước. Bị ngắt → chạy lại Khối 1–4: `resume_point` tìm checkpoint mới nhất và train tiếp từ đó; `grpo_min` khi đó chỉ tính phần chạy tiếp.
 
 ### Khối 5 — Vẽ đường thưởng
 ```python

@@ -110,6 +110,8 @@ def build(name, **lora_kw):
 
 ### Ô 5 (12 dòng) — Train + đo + lưu + ghi bảng điểm
 ```python
+from p01kit.runs import resumable
+@resumable("m03")          # Colab ngắt giữa chừng → chạy lại ô: biến thể đã xong được bỏ qua
 def run(name, **lora_kw):
     m = build(name, **lora_kw)
     n = count_trainable(m)["trainable"]
@@ -128,6 +130,7 @@ def run(name, **lora_kw):
             "eval_loss": eval_loss, "summary": res["summary"], "answer_ok": [s["answer_ok"] for s in res["scores"]]}
 ```
 - **Giải thích:** đọc `scaling["default"]` trực tiếp từ một lớp `q_proj` để **xác minh bằng số** hệ số `s` của mục 1.2 — không tin tài liệu, tin đo đạc.
+- 💡 **Colab miễn phí:** `@resumable("m03")` ghi kết quả mỗi biến thể vào `p01_runs/m03/results/<tên>.json` ngay khi xong. Nếu runtime bị ngắt ở V3, chạy lại Ô 0 → Ô 5 rồi Ô 6–7: V2 được đọc lại từ Drive, chỉ V3/V4 phải train. Muốn train lại có chủ đích: `run("V2_dora_r16", force=True, ...)`.
 
 ### Ô 6 (3 dòng) — V2: DoRA
 ```python

@@ -73,18 +73,23 @@ tok = load_tokenizer()
 
 ### Khối 2 — Khai thác lỗi on-policy: lấy 4 mẫu/câu từ mô hình SFT
 ```python
-policy = load_model(adapter=START)
 K = 4
 def sample_k(model, rows, seed):
     prompts = [render_prompt(tok, r) for r in rows for _ in range(K)]
     outs = generate(model, tok, prompts, batch_size=16, do_sample=True, temperature=0.9, top_p=0.95, seed=seed)
     return [outs[i * K:(i + 1) * K] for i in range(len(rows))]
-t0 = time.perf_counter()
-samples_train, samples_val = sample_k(policy, train, 1), sample_k(policy, val, 2)
-print(f"Sinh {K * (len(train) + len(val))} mẫu trong {(time.perf_counter() - t0) / 60:.1f} phút")
-json.dump({"train": samples_train, "val": samples_val}, open(f"{os.environ['P01_RUNS']}/m08_samples.json", "w"), ensure_ascii=False)
+SAMPLES = f"{os.environ['P01_RUNS']}/m08_samples.json"
+if os.path.exists(SAMPLES):                       # đã sinh ở phiên trước (Colab ngắt sau khối này) → dùng lại
+    cached = json.load(open(SAMPLES)); samples_train, samples_val = cached["train"], cached["val"]; policy = None
+else:
+    policy = load_model(adapter=START)
+    t0 = time.perf_counter()
+    samples_train, samples_val = sample_k(policy, train, 1), sample_k(policy, val, 2)
+    print(f"Sinh {K * (len(train) + len(val))} mẫu trong {(time.perf_counter() - t0) / 60:.1f} phút")
+    json.dump({"train": samples_train, "val": samples_val}, open(SAMPLES, "w"), ensure_ascii=False)
 ```
 - **Giải thích:** T=0,9 cao hơn mức chuẩn để **lộ ra** lỗi mà greedy che giấu. Lưu mẫu thô để tái sử dụng (Buổi 09 cần danh sách "câu khó").
+- 💡 **Colab miễn phí:** đây là khối sinh lâu nhất buổi (4 mẫu × 302 câu). Mẫu được ghi lên Drive ngay khi xong; nếu runtime bị ngắt ở Khối 4–6, chạy lại khối này sẽ đọc file thay vì sinh lại. Xóa `m08_samples.json` nếu bạn đổi `START`.
 
 ### Khối 3 — Dựng cặp (chosen, rejected) với thứ tự ưu tiên lỗi nguy hiểm
 ```python
