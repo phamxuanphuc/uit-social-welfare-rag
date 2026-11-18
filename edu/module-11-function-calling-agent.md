@@ -190,6 +190,14 @@ print(f"End-to-end đúng: {sum(e2e)}/{len(e2e)} | {(time.perf_counter() - t0) /
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Tool ở công ty là API thật** (CSDL hồ sơ, hệ thống một cửa) có xác thực, giới hạn tần suất, timeout. Agent phải xử lý lỗi tool, thử lại có giới hạn, và **không** tự thực hiện hành động không đảo ngược được khi chưa có người xác nhận.
+- **Quyền tối thiểu**: tool tra cứu chỉ được đọc; mọi lời gọi tool được ghi nhật ký kiểm toán kèm `trace_id`.
+- **Đánh giá agent theo nhiệm vụ hoàn thành đầu-cuối** như Khối 7, cộng với kiểm thử an toàn cho đối số của tool (prompt injection đi qua tham số).
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

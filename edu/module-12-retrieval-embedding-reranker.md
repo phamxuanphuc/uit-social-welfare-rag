@@ -234,6 +234,14 @@ print(f"Hệ thống đầu-cuối: đúng {sys_acc:.3f} | trích nhầm văn b�
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Kho văn bản thật thay đổi liên tục**: cần pipeline nạp → tách đoạn → embed lại, xử lý PDF scan (OCR), quản lý phiên bản chỉ mục, và đồng bộ trạng thái hiệu lực (ApprovalAudit) với vector DB.
+- **Đánh giá retriever trên câu hỏi thật** lấy từ log (đã che PII) và được gán nhãn văn bản đúng, cập nhật định kỳ — tập câu sinh bằng luật chỉ là điểm khởi đầu.
+- **Hybrid và reranker được chọn theo ngân sách độ trễ**: reranker cross-encoder thường là bước tốn thời gian nhất trong chuỗi truy xuất.
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

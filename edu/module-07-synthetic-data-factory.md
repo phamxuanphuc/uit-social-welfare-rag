@@ -197,6 +197,14 @@ print("fairness_gap:", res["summary"]["fairness_gap"])
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Kiểm tra điều khoản trước khi sinh dữ liệu bằng mô hình bên thứ 3**: điều khoản của nhiều nhà cung cấp API hạn chế dùng output để phát triển mô hình cạnh tranh — một lý do P01 dùng chính Qwen3 làm teacher.
+- **Data card là yêu cầu khi bàn giao hoặc kiểm toán**: nguồn, quy trình lọc, tỉ lệ loại bỏ, giới hạn, giấy phép.
+- **Người kiểm tra mẫu ngẫu nhiên** mỗi đợt dữ liệu tổng hợp (ví dụ 50 mẫu) và ghi tỉ lệ lỗi trước khi cho vào train; phễu lọc tự động không thay được bước này.
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

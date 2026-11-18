@@ -295,6 +295,15 @@ scoreboard.show()
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Baseline thật là hệ thống đang có**, không chỉ base model: quy trình tra cứu thủ công, trang FAQ, bộ luật từ khóa, hoặc một API mô hình lớn. Fine-tune chỉ đáng làm khi thắng các phương án đó về chất lượng **và** chi phí/độ trễ.
+- **Ràng buộc deploy được chốt trước khi chọn mô hình.** Ở P01 là CPU 2 vCPU / 4 GiB (ADR 0001), nên 1,7B được chọn trước khi đo bất cứ thứ gì. Ở công ty, đội ước tính chi phí suy luận (token/request × request/ngày) ngay từ đầu.
+- **Giấy phép mô hình** (Apache-2.0 với Qwen3) được bộ phận pháp chế kiểm tra trước khi dùng cho sản phẩm.
+- **Phân tích lỗi trên mẫu traffic thật** (đã che PII), không chỉ trên tập test tự dựng: câu hỏi thật thường ngắn hơn, sai chính tả, không dấu (Buổi 15).
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

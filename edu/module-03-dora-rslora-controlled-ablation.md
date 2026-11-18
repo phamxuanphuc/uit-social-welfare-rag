@@ -189,6 +189,14 @@ plt.xlabel("epoch"); plt.ylabel("eval_loss"); plt.legend(); plt.title("Val loss 
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Ablation bị giới hạn bởi ngân sách GPU**: đội thường thử trên tập con hoặc mô hình nhỏ trước, rồi chỉ chạy cấu hình thắng ở quy mô đầy đủ.
+- **Báo cáo thí nghiệm theo mẫu cố định** (giả thuyết, biến thay đổi, biến giữ nguyên, kết quả + khoảng tin cậy, quyết định) lưu ở wiki hoặc W&B Report để người khác đọc lại sau 6 tháng.
+- **Chênh lệch nằm trong khoảng nhiễu → chọn phương án đơn giản, rẻ hơn.** Mỗi kỹ thuật thêm vào là thêm thứ phải bảo trì và giải thích khi có sự cố.
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

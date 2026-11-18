@@ -222,6 +222,14 @@ scoreboard.show()
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Cặp ưu tiên ngoài đời đến từ người**: người gán nhãn so hai câu trả lời, chuyên gia sửa câu trả lời, hoặc phản hồi thích/không thích của người dùng. Vì tốn kém, đội thường khai thác lỗi on-policy như buổi này để giảm số cặp cần người duyệt.
+- **Hướng dẫn chấm cặp được viết thành văn bản** (đúng văn bản > đủ giấy tờ > văn phong) và đo đồng thuận giữa người chấm, giống nhãn lỗi ở Buổi 15.
+- **Mỗi vòng căn chỉnh phải chạy lại toàn bộ bộ đánh giá + red-team**, vì căn chỉnh cho một tiêu chí có thể làm hỏng tiêu chí khác.
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

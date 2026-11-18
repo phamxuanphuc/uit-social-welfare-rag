@@ -190,6 +190,14 @@ for k, r in results.items():
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Văn bản nhiễu "khó" lấy từ chính retriever đang chạy** (các kết quả top-k sai trong log) thay vì sinh bằng luật — đó đúng là phân phối lỗi mô hình sẽ gặp.
+- **Tỉ lệ từ chối là quyết định sản phẩm**: từ chối nhiều → người dân bỏ đi hoặc dồn về quầy; từ chối ít → rủi ro hướng dẫn sai. Ngưỡng được chốt cùng chủ sản phẩm dựa trên chi phí của từng loại lỗi.
+- **Ma trận lỗi được theo dõi xuyên phiên bản**, mỗi loại lỗi nguy hiểm (bịa văn bản, bỏ sót hết hạn) có người phụ trách.
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

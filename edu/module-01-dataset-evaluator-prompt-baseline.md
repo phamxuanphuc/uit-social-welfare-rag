@@ -224,6 +224,15 @@ scoreboard.show()
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Dữ liệu thật không sạch như tập sinh bằng luật.** Nó đến từ log, biểu mẫu, email; cần **hướng dẫn gán nhãn** viết thành văn bản, nhiều người gán độc lập và đo đồng thuận (Cohen's κ — Buổi 15) trước khi tin nhãn.
+- **Tập test được đóng băng và có phiên bản** (hash như Release Dossier, DVC, hoặc revision của dataset trên Hub). Ai đổi tập test phải ghi lý do; số liệu trước/sau khi đổi không so trực tiếp được.
+- **Bộ chấm là code sản phẩm**: được review và có unit test (`tests/test_metrics.py`). Sửa bộ chấm = phải chấm lại toàn bộ bảng điểm lịch sử.
+- **Ma trận Prompt vs RAG vs Fine-tune** thường được viết thành một trang *design doc* để trưởng nhóm/quản lý duyệt **trước** khi tốn GPU.
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

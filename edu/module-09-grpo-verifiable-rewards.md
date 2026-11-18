@@ -184,6 +184,14 @@ print("Độ dài verification_reasoning trung bình:", sum(reason_len) / len(re
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **RL chỉ dùng khi đáng**: tốn GPU, khó tái lập, dễ bị lách luật. Đội thường chỉ làm khi có phần thưởng kiểm chứng được bằng code và SFT/DPO đã bão hòa.
+- **Hàm thưởng là code sản phẩm**: được review, có test (`tests/test_training_utils.py`) và có phiên bản — đổi hàm thưởng là đổi mục tiêu tối ưu, phải ghi vào hồ sơ phát hành.
+- **Theo dõi reward hacking bằng bộ đánh giá độc lập** và đọc mẫu ngẫu nhiên định kỳ trong lúc train, không chỉ nhìn đường thưởng đi lên.
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

@@ -217,6 +217,14 @@ for name, r in [("NEFTune", resC), ("Map", resB), ("Cả hai", resD)]:
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Chọn framework train** (Unsloth, TRL, Axolotl, LLaMA-Factory…) dựa trên phần cứng của cụm, khả năng chạy đa GPU, tần suất đổi API và rủi ro khóa phiên bản — tốc độ trên 1 GPU chỉ là một tiêu chí.
+- **Theo dõi thí nghiệm tập trung** (W&B/MLflow) có phân quyền theo dự án; **không** ghi dữ liệu cá nhân hay output thô có PII vào log thí nghiệm.
+- **Nhóm cần công bằng được định nghĩa cùng nghiệp vụ/pháp chế**, kèm mức chênh chấp nhận được. Ở P01 là giọng chuẩn vs đời thường; ngoài đời còn có vùng miền, người cao tuổi, người gõ không dấu (Buổi 15).
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

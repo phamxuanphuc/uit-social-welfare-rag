@@ -243,6 +243,15 @@ scoreboard.show()
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Huấn luyện chạy như một job có cấu hình** (script trong repo + file YAML/CLI, chạy trên cụm GPU hoặc dịch vụ train), không chạy tay từng ô notebook. Notebook dùng để khám phá; thứ được phát hành phải tái lập được bằng một lệnh.
+- **Mỗi lượt train ghi đủ "dấu vết"**: commit code, phiên bản dữ liệu, seed, siêu tham số, phiên bản thư viện — thiếu một thứ là không tái lập được.
+- **Adapter vào model registry** (repo private trên Hugging Face Hub có tag, MLflow, W&B Artifacts) thay vì một thư mục Drive; người khác lấy đúng phiên bản bằng tên + phiên bản.
+- **Kiểm tra masking (Ô 3) thường thành test tự động trong CI**, vì lỗi chat template/masking là lỗi "im lặng": loss vẫn giảm, mô hình vẫn tệ.
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

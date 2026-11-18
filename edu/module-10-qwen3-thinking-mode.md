@@ -177,6 +177,13 @@ print(f"Định tuyến: bật thinking cho {sum(route)}/100 câu | answer_acc={
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Bật thinking là đánh đổi chi phí & độ trễ lấy độ chính xác.** Quyết định dựa trên SLO và ngân sách (Buổi 15), thường bằng một bộ định tuyến như Khối 6 chứ không bật cho mọi request.
+- **Vết suy luận cũng là dữ liệu người dùng**: áp cùng chính sách che PII và thời hạn lưu như câu trả lời; nhiều sản phẩm không hiển thị vết suy luận cho người dùng cuối.
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

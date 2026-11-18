@@ -222,6 +222,14 @@ scoreboard.show()
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Quét siêu tham số chạy song song** bằng công cụ sweep (W&B Sweeps, Optuna, Ray Tune) với ngân sách GPU đặt trước và dừng sớm các lượt kém.
+- **Kỷ luật "test đo đúng một lần" được thực thi bằng quy trình**, không bằng ý thức: tập test chỉ chạy qua job đánh giá chính thức, kết quả ghi vào hồ sơ phát hành.
+- **Lỗi trên cụm GPU thường lẫn lỗi hạ tầng** (node hỏng, mất kết nối lưu trữ) → luôn lưu checkpoint định kỳ và kiểm tra khả năng resume trước lượt train dài.
+
+---
+
 ## 4. Bài tập
 
 **Bắt buộc**

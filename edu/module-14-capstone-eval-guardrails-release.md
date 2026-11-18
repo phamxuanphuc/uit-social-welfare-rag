@@ -264,6 +264,14 @@ scoreboard.show()
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Quyết định phát hành có nhiều bên ký**: kỹ thuật, nghiệp vụ, pháp chế, an toàn. Release Dossier và Model Card là tài liệu để họ đọc và ký, nên phải dẫn được tới số liệu gốc.
+- **Red-team có đội riêng hoặc thuê ngoài**; kịch bản tấn công được cập nhật liên tục và mỗi ca từng lọt trở thành một test hồi quy.
+- **Phát hành không dừng ở hồ sơ**: tiếp theo là shadow → canary → giám sát → vòng phản hồi → huấn luyện lại (Buổi 15).
+
+---
+
 ## 4. Bài tập (đồ án cuối khóa)
 
 **Bắt buộc**

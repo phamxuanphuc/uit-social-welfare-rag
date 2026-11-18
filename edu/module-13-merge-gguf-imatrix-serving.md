@@ -234,6 +234,14 @@ print(sorted(os.listdir(dst)))
 
 ---
 
+## 🏢 Ở công ty thật
+
+- **Phục vụ bằng container có cấu hình ghim** (tag image, hash mô hình), triển khai qua CI/CD có revision và rollback, kiểm thử tải trước khi mở traffic (Buổi 15).
+- **Chọn engine theo phần cứng và chi phí mỗi 1.000 request ở SLO yêu cầu**: trên GPU thường là vLLM/TGI/SGLang (continuous batching); trên CPU hoặc thiết bị biên là llama.cpp/ONNX.
+- **Đánh giá lại trên chính artifact deploy** (file GGUF), không suy ra từ adapter, và ghi hash vào hồ sơ phát hành.
+
+---
+
 ## 5. Bài tập
 
 **Bắt buộc**

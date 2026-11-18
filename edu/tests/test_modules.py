@@ -12,7 +12,8 @@ MODULES = sorted(EDU.glob("module-*.md"))
 BLOCK_RE = re.compile(r"```(\w+)\n(.*?)```", re.S)
 import textwrap  # noqa: E402  (khối code nằm trong danh sách Markdown bị thụt lề)
 
-REQUIRED_SECTIONS = ["Kết quả nên thấy", "Bài tập", "Câu hỏi phỏng vấn", "Checklist cuối buổi", "So sánh hiệu quả"]
+REQUIRED_SECTIONS = ["Kết quả nên thấy", "Bài tập", "Câu hỏi phỏng vấn", "Checklist cuối buổi", "So sánh hiệu quả",
+                     "Ở công ty thật"]
 # API đã bị bỏ/đổi tên ở bộ thư viện đã ghim (transformers 5.17, trl 1.15) — không được xuất hiện trong code.
 REMOVED_APIS = ["warmup_ratio", "torch_dtype=", "max_prompt_length", "group_by_length", "rpo_alpha",
                 "evaluation_strategy", "tokenizer=tok", "dataset_text_field", "from trl import ORPO"]
