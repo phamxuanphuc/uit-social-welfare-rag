@@ -191,3 +191,6 @@ Bảng dưới nối mỗi việc một kỹ sư LLM/AI hay được giao ở do
 
 ## Thời lượng & phần cứng
 ~59 giờ học (16 buổi × 3–4 giờ). Lượt train dài nhất: GRPO (Buổi 09) và biên dịch llama.cpp (Buổi 13). Tất cả chạy trên Colab T4 15 GB; nếu có GPU Ampere+ (L4/A100), đổi `fp16=True` thành `bf16=True`.
+
+## Giấy phép
+Code (`p01kit`, test, CI) theo **MIT** — [LICENSE](../LICENSE). Bài học, tài liệu và dữ liệu giả lập theo **CC BY 4.0** — [LICENSE-CONTENT.md](../LICENSE-CONTENT.md), kèm danh sách phần không thuộc giấy phép (báo cáo SDG của Liên Hợp Quốc, ghi chú bài giảng, mô hình/dữ liệu bên thứ ba tải lúc chạy).
