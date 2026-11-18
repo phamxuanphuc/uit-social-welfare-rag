@@ -1,0 +1,38 @@
+{
+ "source": "th1nhng0/vietnamese-legal-documents",
+ "snapshot": "2026-07-23",
+ "n_docs": 2937,
+ "n_docs_with_text": 2683,
+ "n_article_chunks": 20478,
+ "validity": {
+  "expired": 1611,
+  "active": 1289,
+  "unknown": 37
+ },
+ "status_conflicts": 3,
+ "national": 845,
+ "regions": 73,
+ "topics": {
+  "viec_lam": 670,
+  "bhxh": 448,
+  "bhyt": 972,
+  "tro_giup_xa_hoi": 585,
+  "ho_ngheo": 438,
+  "bhtn": 59,
+  "bhxh_tu_nguyen": 57,
+  "ho_tro_nguoi_lao_dong": 33,
+  "huu_tri_xa_hoi": 13
+ },
+ "types": {
+  "Quyết định": 1118,
+  "Nghị quyết": 1053,
+  "Thông tư": 349,
+  "Thông tư liên tịch": 141,
+  "Nghị định": 127,
+  "Chỉ thị": 94,
+  "Văn bản hợp nhất": 34,
+  "Luật": 8,
+  "Công văn": 5,
+  "Văn bản khác": 4
+ }
+}
