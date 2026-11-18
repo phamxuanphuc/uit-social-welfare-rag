@@ -12,3 +12,7 @@ venv/
 .env
 wandb/
 p01_runs/
+
+# Dữ liệu thật tải về (tái tạo bằng data_pipeline/vbpl_welfare.py)
+data/real/raw/
+data/real/*.jsonl

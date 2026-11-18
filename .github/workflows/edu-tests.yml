@@ -5,9 +5,9 @@ name: edu-tests
 on:
   push:
     branches: [main]
-    paths: ["edu/**", ".github/workflows/edu-tests.yml"]
+    paths: ["edu/**", "data_pipeline/**", "tests/**", ".github/workflows/edu-tests.yml"]
   pull_request:
-    paths: ["edu/**", ".github/workflows/edu-tests.yml"]
+    paths: ["edu/**", "data_pipeline/**", "tests/**", ".github/workflows/edu-tests.yml"]
 
 permissions:
   contents: read
@@ -26,11 +26,15 @@ jobs:
         with:
           python-version: "3.11"   # cùng phiên bản với container deploy (ADR 0001)
           cache: pip
-          cache-dependency-path: edu/requirements-dev.txt
+          cache-dependency-path: |
+            edu/requirements-dev.txt
+            data_pipeline/requirements.txt
       - name: Install CPU-only torch, then dev requirements
         run: |
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install -r edu/requirements-dev.txt
+          pip install -r edu/requirements-dev.txt -r data_pipeline/requirements.txt
       - name: Run tests
         run: python -m pytest edu/tests -q
+      - name: Run data pipeline tests
+        run: python -m pytest tests -q
