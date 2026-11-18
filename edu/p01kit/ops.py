@@ -10,7 +10,11 @@ import math
 from collections import Counter
 from typing import Iterable, Mapping, Sequence
 
-from .metrics import gate, summarize
+import json
+
+from .data import Corpus, Policy
+from .guardrails import check_input, enforce_metadata
+from .metrics import extract_json, gate, score_one, summarize
 from .stats import mcnemar_exact
 
 
@@ -53,6 +57,24 @@ def capacity_plan(peak_rpm: float, service_time_s: float, slots_per_replica: int
 # ---------------------------------------------------------------------------
 # Cổng phát hành champion vs challenger
 # ---------------------------------------------------------------------------
+
+ANSWER_FIELDS = ("verification_reasoning", "is_refusal", "expired_warning", "doc_code", "article", "benefit",
+                 "required_documents", "submission_place")
+
+
+def system_scores(outputs: Sequence[str], rows: Sequence[dict], corpus: Corpus) -> list[dict]:
+    """Chấm HỆ THỐNG sẽ được deploy (mô hình + guardrail tầng 1–3), không chấm mô hình trần.
+
+    Cổng phát hành phải đo đúng thứ người dùng nhận được — cùng logic với Khối 3 của Buổi 14.
+    """
+    scores = []
+    for out, r in zip(outputs, rows, strict=True):
+        g = check_input(r["region"], r["question"], corpus)
+        final = ({"is_refusal": True} if g["blocked"]
+                 else enforce_metadata(extract_json(out)[0], r["context_ids"], corpus))
+        scores.append(score_one(json.dumps({k: final.get(k) for k in ANSWER_FIELDS}, ensure_ascii=False), r))
+    return scores
+
 
 GATE_METRICS = ("refusal_acc", "citation_precision", "answer_acc", "expired_recall", "strict_acc")
 SLICE_KEYS = ("style", "slice")
@@ -223,3 +245,20 @@ def error_category(score: dict) -> str:
     if not score["expired_ok"]:
         return "khong_canh_bao_het_han"
     return "sai_giay_to_noi_nop"
+
+
+def system_label(answer: dict, need: Policy | None) -> str:
+    """Nhãn cho một request đi qua API (ngữ cảnh do retriever chọn): so với văn bản người dân THẬT SỰ cần.
+
+    `need` = `data.resolve(topic, region_code, corpus.policies)` của câu hỏi gốc; None nghĩa là phải từ chối.
+    """
+    refused = bool(answer.get("is_refusal"))
+    if need is None:
+        return "dung" if refused else "le_ra_tu_choi"
+    if refused:
+        return "tu_choi_nham"
+    if answer.get("doc_code") != need.doc_code:
+        return "sai_van_ban"
+    if bool(answer.get("expired_warning")) != (not need.is_active):
+        return "khong_canh_bao_het_han"
+    return "dung"

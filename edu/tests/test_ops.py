@@ -113,3 +113,34 @@ def test_cohen_kappa():
     assert cohen_kappa(a, b) == 0.4
     with pytest.raises(ValueError):
         cohen_kappa([], [])
+
+
+def test_system_scores_apply_guardrails(splits, corpus):
+    from p01kit.ops import system_scores
+
+    test = splits["test"]
+    answerable = [r for r in test if not r["is_unanswerable"]]
+    # Mô hình chọn đúng văn bản nhưng quên cờ hết hạn và bịa giấy tờ → guardrail sửa lại, hệ thống vẫn đúng
+    sloppy = [json.dumps({**r["gold"], "expired_warning": False, "required_documents": ["bịa"]}, ensure_ascii=False)
+              for r in answerable]
+    raw = [score_one(o, r) for o, r in zip(sloppy, answerable)]
+    fixed = system_scores(sloppy, answerable, corpus)
+    assert sum(s["strict_ok"] for s in raw) < len(answerable)
+    assert all(s["strict_ok"] for s in fixed)
+    with pytest.raises(ValueError):
+        system_scores(sloppy[:-1], answerable, corpus)
+
+
+def test_system_label(corpus):
+    from p01kit.ops import system_label
+
+    active = next(p for p in corpus.policies if p.is_active)
+    old = next(p for p in corpus.policies if not p.is_active)
+    ans = lambda **kw: {"is_refusal": False, "expired_warning": False, **kw}
+    assert system_label({"is_refusal": True}, None) == "dung"
+    assert system_label(ans(doc_code=active.doc_code), None) == "le_ra_tu_choi"
+    assert system_label({"is_refusal": True}, active) == "tu_choi_nham"
+    assert system_label(ans(doc_code=old.doc_code), active) == "sai_van_ban"
+    assert system_label(ans(doc_code=old.doc_code), old) == "khong_canh_bao_het_han"
+    assert system_label(ans(doc_code=old.doc_code, expired_warning=True), old) == "dung"
+    assert system_label(ans(doc_code=active.doc_code), active) == "dung"
