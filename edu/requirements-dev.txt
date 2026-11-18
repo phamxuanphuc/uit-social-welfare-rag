@@ -1,0 +1,5 @@
+# Chạy bộ kiểm thử p01kit trên máy cá nhân (CPU, không cần GPU):
+#   python -m venv .venv && .venv/bin/pip install -r edu/requirements-dev.txt && .venv/bin/python -m pytest edu/tests
+pytest>=8
+torch
+transformers==5.17.0

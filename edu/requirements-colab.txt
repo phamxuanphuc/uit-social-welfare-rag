@@ -1,0 +1,11 @@
+# Bộ thư viện GHIM CHUNG cho mọi buổi (đã kiểm tra tương thích ràng buộc của unsloth 2026.11.3).
+# Cài trên Colab: !pip install -q -r requirements-colab.txt  (rồi Runtime > Restart session một lần)
+unsloth==2026.11.3
+transformers==5.17.0
+trl==1.15.0
+peft==0.21.2
+datasets==4.8.5
+bitsandbytes==0.50.2
+accelerate==1.16.0
+sentence-transformers==6.2.0
+wandb==0.31.0

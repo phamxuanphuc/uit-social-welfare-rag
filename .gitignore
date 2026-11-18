@@ -11,3 +11,4 @@ venv/
 *.gguf
 .env
 wandb/
+p01_runs/
