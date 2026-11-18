@@ -2,7 +2,8 @@
 
 - **Môn học:** Tư duy Trí tuệ nhân tạo (HK1 · 2026–2027)
 - **Đích SDG:** `1.3` — Mở rộng độ phủ an sinh xã hội cho người nghèo và nhóm dễ bị tổn thương *(theo [Extended-Report-2026_Goal-1.pdf](document/Extended-Report-2026_Goal-1.pdf), tỷ lệ phủ toàn cầu năm 2023 mới đạt 52.4%, trợ cấp thất nghiệp chỉ 16.7%)*.
-- **Tài liệu kiến trúc liên quan:** [CONTEXT.md](CONTEXT.md), [ADR 0001](docs/adr/0001-cpu-only-gguf-onnx-runtime.md), [ADR 0002](docs/adr/0002-dual-mode-rag-with-hard-safety-guardrails.md), [ADR 0003](docs/adr/0003-raft-dora-orpo-grpo-imatrix-pipeline.md).
+- **Tài liệu kiến trúc liên quan:** [CONTEXT.md](CONTEXT.md), [ADR 0001](docs/adr/0001-cpu-only-gguf-onnx-runtime.md), [ADR 0002](docs/adr/0002-dual-mode-rag-with-hard-safety-guardrails.md), [ADR 0003](docs/adr/0003-raft-dora-orpo-grpo-imatrix-pipeline.md), [Đề cương Fine-tune Thực chiến](document/qwen3-finetune-master-curriculum.md).
+- **Mã nguồn mở tham chiếu:** `thanhdo881/qwen3-1.7b-vivu-travel-vn`, `duyet/vietnamese-legal-instruct`, `fisherman611/vietnamese-legal-chatbot`, `tangbamiinh/traffic-law-assistant`, `sameerahmed-cloud/verity-rag` (Grounding Check `[Context N]`), `Aryanupadhyay23/conversational-research-rag` (Qdrant keep-alive & nhãn *Grounded vs. Unverified*), `AcadifySolution/llm-security-proxy`, `lamhotsiagian/guardrail-system-rag` (4-layer Guardrail & `pytest` gate), `farhan-syah/unsloth-finetuning` (4 pha `train -> build -> benchmark -> push`), `anaalkmim/rag-eval` (Qdrant Payload filtering & unanswerable eval).
 
 ---
 
