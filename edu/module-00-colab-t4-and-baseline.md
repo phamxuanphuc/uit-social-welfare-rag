@@ -1,60 +1,52 @@
-# Buổi 0 (Module 0): Máy X-Quang Bộ Não `Qwen3-1.7B` & Bộ Đo Baseline (Chia nhỏ từng ô 4–8 dòng)
+# Buổi 0 (Module 0): Phòng thí nghiệm Colab T4, `4-bit NF4`, `FP16 vs BF16` & Đo Baseline
 
-- **Mô hình thực hành:** `Qwen/Qwen3-1.7B` trên Google Colab `T4 GPU`.
-- **🎯 Sản phẩm chạy được cuối buổi:** **Công cụ "X-Quang & Chấm điểm Baseline `Qwen3-1.7B`"** — vừa soi được xác suất Top-5 chữ tiếp theo bên trong não mô hình, vừa tự động chấm điểm xem mô hình gốc trả lời đúng bao nhiêu `%` trên bài toán P01 trước khi học.
-- **Cách thực hành buổi đầu:** Tuyệt đối không chạy khối code dài — bạn chỉ cần copy từng **ô siêu nhỏ (4–8 dòng)** dưới đây vào Colab, bấm chạy và nhìn kết quả ngay!
+- **Mô hình thực hành:** `Qwen/Qwen3-1.7B` trên Google Colab `T4 GPU` (15 GB VRAM).
+- **🎯 Sản phẩm cuối buổi:** **Máy X-Quang `Qwen3-1.7B` & Bộ Đo Baseline** — soi Top-5 xác suất chữ tiếp theo và đo điểm gốc (trước fine-tune).
+- **Chế độ học:** Chia siêu nhỏ từng ô (4–10 dòng/ô), ghim phiên bản thư viện để tái lập 100%.
 
 ---
 
-## 1. Giải thích Bản chất theo Phương pháp Feynman
+## 1. Giải thích theo Phương pháp Feynman
 
-1. **Tại sao cần GPU T4 thay vì CPU?**
-   - CPU giống 1 giáo sư làm từng phép tính một; còn GPU T4 giống **2,560 học sinh cùng bấm máy tính một lúc**. Vì `Qwen3-1.7B` là 1.72 tỷ con số nhân ma trận, chạy trên T4 nhanh gấp hàng chục lần.
-2. **Tại sao phải nén `4-bit NF4`?**
-   - Ở chuẩn 16-bit (`FP16`), `Qwen3-1.7B` ngốn **~3.44 GB VRAM**. Khi nén sang **`4-bit NF4`**, mỗi con số chỉ tốn 0.5 byte nên toàn bộ mô hình chỉ còn **`1.27 GB VRAM`**, chừa hơn 13 GB trống trên card T4 để bạn thoải mái Fine-tune ở các buổi sau.
-3. **Tại sao phải tắt Thinking Mode (`enable_thinking=False`)?**
-   - Mặc định Qwen3 hay tự lẩm bẩm trong thẻ `<think>...</think>` mất 5–10 giây trước khi trả lời. Tắt đi giúp mô hình trả lời thẳng vào trọng tâm, nhanh gấp 3 lần.
+1. **Tại sao phải dùng `FP16` trên T4 thay vì `BF16`?**
+   - **Hình ảnh Feynman:** `FP16` và `BF16` đều là số 16-bit (2 bytes). `BF16` có dải số rộng hơn nên ít bị tràn số khi train, nhưng **chỉ card đời mới (Ampere A100/L4/RTX 30xx trở lên) mới có mạch phần cứng chạy `BF16`**. Card **Tesla T4** thuộc thế hệ Turing cũ hơn nên **chỉ tăng tốc được `FP16`**. Bật `bf16=True` trên T4 sẽ báo lỗi hoặc chạy chậm như rùa!
+2. **Tại sao cần nén `4-bit NF4` (`1.27 GB VRAM`)?**
+   - Mô hình 1.72 tỷ tham số ở `FP16` chiếm ~3.44 GB. Khi train cần thêm chỗ cho Gradients + Optimizer + Activations, dễ vượt 15 GB của T4. Nén 4-bit `NF4` đưa mô hình về **`1.27 GB`**, chừa >13 GB để học thoải mái.
+3. **Tại sao tắt Thinking Mode (`enable_thinking=False`)?**
+   - Qwen3 mặc định sinh `<think>...</think>` rất dài trước khi trả lời. Tắt đi giúp trả lời thẳng vào JSON/câu trả lời, nhanh gấp 3 lần.
 
 ---
 
 ## 2. Thực hành Từng Ô Nhỏ trên Google Colab
 
-### Ô 1 (1 dòng): Kiểm tra card đồ họa Tesla T4 15 GB
+### Ô 1 (1 dòng): Kiểm tra GPU Tesla T4
 ```bash
 !nvidia-smi
 ```
-- **Giải thích:** Dấu `!` báo Colab chạy lệnh Linux. Nhìn vào bảng kết quả, thấy chữ `Tesla T4` và `15360MiB` là đạt!
 
----
-
-### Ô 2 (1 dòng): Cài thư viện nén 4-bit và huấn luyện
+### Ô 2 (2 dòng): Cài đặt thư viện đã ghim phiên bản (Reproducibility)
 ```bash
-!pip install -q bitsandbytes peft trl datasets accelerate
+!pip install -q "transformers==4.51.3" "trl==0.16.1" "peft==0.15.2" "bitsandbytes==0.45.5" "accelerate==1.6.0" "datasets==3.5.0"
 ```
-- **Giải thích:** Cài đặt sẵn `bitsandbytes` (nén 4-bit), `peft` (gắn LoRA) và `trl` (huấn luyện). Cờ `-q` giúp màn hình gọn sạch.
+- **Tại sao phải ghim phiên bản?** `trl` và `transformers` đổi tên tham số rất nhanh; ghim phiên bản đảm bảo chạy hôm nay hay 6 tháng sau vẫn không lỗi.
 
----
-
-### Ô 3 (6 dòng): Tải "Cuốn từ điển" (`Tokenizer`) của `Qwen3-1.7B`
+### Ô 3 (9 dòng): Cố định Seed, Nạp Tokenizer & Kiểm tra Token tiếng Việt
 ```python
+import random, numpy as np, torch
 from transformers import AutoTokenizer
 
-model_id = "Qwen/Qwen3-1.7B"
-tokenizer = AutoTokenizer.from_pretrained(model_id)
+def set_seed(seed=42):
+    random.seed(seed); np.random.seed(seed); torch.manual_seed(seed); torch.cuda.manual_seed_all(seed)
 
-cau_thu = "Tôi chạy xe ôm ở Phường Tân Tạo bị tai nạn"
-ids = tokenizer.encode(cau_thu)
-print("Số từ trong từ điển:", len(tokenizer), "| Các mảnh cắt:", [tokenizer.decode([i]) for i in ids])
+set_seed(42)
+MODEL_ID = "Qwen/Qwen3-1.7B"
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+ids = tokenizer.encode("Tôi chạy xe ôm ở Phường Tân Tạo")
+print("Từ điển:", len(tokenizer), "| Mảnh cắt:", [tokenizer.decode([i]) for i in ids])
 ```
-- **Giải thích từng dòng:**
-  - `AutoTokenizer.from_pretrained(...)`: Tải cuốn sổ danh bạ ~151,936 mảnh chữ của Qwen3.
-  - `tokenizer.encode(...)`: Đổi câu tiếng Việt thành dãy mã số `ids` vì GPU chỉ biết nhân cộng con số.
 
----
-
-### Ô 4 (8 dòng): Cấu hình công thức nén `4-bit NF4`
+### Ô 4 (11 dòng): Nạp `Qwen3-1.7B` chế độ `4-bit NF4` (`compute_dtype=float16`)
 ```python
-import torch
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
 bnb_config = BitsAndBytesConfig(
@@ -63,78 +55,52 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_compute_dtype=torch.float16,
     bnb_4bit_use_double_quant=True,
 )
-print("Đã tạo xong công thức nén 4-bit NF4!")
-```
-- **Giải thích từng dòng:**
-  - `load_in_4bit=True` & `bnb_4bit_quant_type="nf4"`: Nén trọng số xuống 4-bit theo phân phối chuẩn.
-  - `bnb_4bit_compute_dtype=torch.float16`: Lúc nhân ma trận thì tạm bung từng cụm nhỏ ra 16-bit để tính cho chuẩn.
-
----
-
-### Ô 5 (6 dòng): Nạp "Bộ não" `Qwen3-1.7B` lên GPU T4 và đo VRAM
-```python
-model = AutoModelForCausalLM.from_pretrained(
-    model_id,
-    quantization_config=bnb_config,
-    device_map="auto",
-)
+model = AutoModelForCausalLM.from_pretrained(MODEL_ID, quantization_config=bnb_config, device_map="auto")
 model.eval()
-print(f"Đã nạp Qwen3-1.7B! VRAM chỉ tốn: {torch.cuda.memory_allocated() / (1024**3):.2f} GB")
+print(f"VRAM đang chiếm: {torch.cuda.memory_allocated() / (1024**3):.2f} GB")
 ```
-- **Giải thích:** `device_map="auto"` tự động đẩy toàn bộ 28 tầng của Qwen3 lên GPU T4. Bạn sẽ thấy VRAM chỉ tốn đúng **`1.27 GB`**!
 
----
-
-### Ô 6 (9 dòng): 🎯 Sản phẩm 1 — "Máy X-Quang" soi Top-5 chữ trong não `Qwen3-1.7B`
+### Ô 5 (9 dòng): 🎯 Sản phẩm 1 — Máy X-Quang Top-5 chữ trong não `Qwen3-1.7B`
 ```python
 def xray_next_word(prompt_text: str):
     inp = tokenizer(prompt_text, return_tensors="pt").to("cuda")
     with torch.no_grad():
         probs = torch.softmax(model(**inp).logits[0, -1, :], dim=-1)
-    top_p, top_i = torch.topk(probs, 5)
-    print(f"\n🔬 X-Quang câu: '{prompt_text} ...'")
-    for p, tid in zip(top_p, top_i):
+    for p, tid in zip(*torch.topk(probs, 5)):
         print(f"  -> '{tokenizer.decode([tid.item()])}' ({p.item()*100:.1f}%)")
 
 xray_next_word("Người lao động chạy xe ôm bị tai nạn cần nộp hồ sơ tại")
 ```
-- **Giải thích:** Hàm `torch.softmax` biến 151,936 điểm số ở tầng cuối của Qwen3 thành phần trăm `%`. Bạn thấy tận mắt 5 chữ mà mô hình đang định viết tiếp theo!
 
----
-
-### Ô 7 (10 dòng): Viết hàm hỏi đáp tắt `<think>` (`enable_thinking=False`)
+### Ô 6 (11 dòng): Hàm hỏi chuẩn `ask_qwen()` nhận `sys_prompt` linh hoạt
 ```python
-def ask_qwen(question: str, sys_msg: str = "Trả lời ngắn gọn bằng 100% tiếng Việt.") -> str:
-    msgs = [{"role": "system", "content": sys_msg}, {"role": "user", "content": question}]
-    text = tokenizer.apply_chat_template(
-        msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False
-    )
+def ask_qwen(model_obj, sys_prompt: str, user_prompt: str, use_lora: bool = True, max_tokens: int = 150) -> str:
+    msgs = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": user_prompt}]
+    text = tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True, enable_thinking=False)
     inp = tokenizer([text], return_tensors="pt").to("cuda")
-    with torch.no_grad():
-        out = model.generate(**inp, max_new_tokens=150, do_sample=False)
-    return tokenizer.decode(out[0][inp["input_ids"].shape[-1]:], skip_special_tokens=True)
-
-print(ask_qwen("Tôi chạy xe ôm ở Phường Tân Tạo bị tai nạn thì nộp hồ sơ nhận hỗ trợ ở đâu?"))
+    p_len = inp["input_ids"].shape[-1]
+    ctx = model_obj.disable_adapter() if (not use_lora and hasattr(model_obj, "disable_adapter")) else torch.no_grad()
+    with ctx, torch.no_grad():
+        out = model_obj.generate(**inp, max_new_tokens=max_tokens, do_sample=False)
+    return tokenizer.decode(out[0][p_len:], skip_special_tokens=True)
 ```
-- **Giải thích:** `do_sample=False` bắt mô hình luôn chọn chữ có xác suất cao nhất (không tung xúc xắc ngẫu nhiên), giúp kết quả đo lường cố định 100%.
 
----
-
-### Ô 8 (10 dòng): 📊 Sản phẩm 2 — Bảng Chấm điểm Baseline Tự động (Trước Fine-tune)
+### Ô 7 (10 dòng): 📊 Sản phẩm 2 — Đo Mốc Baseline (Trước Fine-tune)
 ```python
+SYS_BASE = "Bạn là trợ lý tra cứu an sinh xã hội. Chỉ dùng 100% tiếng Việt."
 baseline_tests = [
     ("Tôi chạy xe ôm ở Phường Tân Tạo bị tai nạn cần văn bản nào?", "NQ-01/2026/HĐND-HCM"),
     ("Con của phụ hồ ở Phường Tân Tạo xin hỗ trợ BHYT theo quyết định nào?", "QĐ-15/2026/UBND-HCM"),
     ("Xin tiền thuê nhà trọ năm 2024 ở Phường Tân Tạo còn hiệu lực không?", "hết hiệu lực"),
 ]
-
-correct = 0
-for q, expected_kw in baseline_tests:
-    ans = ask_qwen(q)
-    hit = expected_kw.lower() in ans.lower()
-    correct += int(hit)
-    print(f"\n❓ {q}\n🔴 Trả lời gốc: {ans[:120]}...\n👉 Chứa thông tin chuẩn '{expected_kw}': {hit}")
-
-print(f"\n📊 ĐIỂM BASELINE (TRƯỚC FINE-TUNE): {correct}/{len(baseline_tests)} ({correct/len(baseline_tests)*100:.0f}%)")
+hits = [kw.lower() in ask_qwen(model, SYS_BASE, q).lower() for q, kw in baseline_tests]
+print(f"📊 ĐIỂM BASELINE (TRƯỚC FINE-TUNE): {sum(hits)}/{len(hits)} ({sum(hits)/len(hits)*100:.0f}%)")
 ```
-- **Ý nghĩa động lực:** Bạn sẽ thấy điểm Baseline ban đầu là **`0/3 (0%)`** vì `Qwen3-1.7B` gốc chưa hề biết quy định địa phương P01. Từ Buổi 1 trở đi, chúng ta sẽ làm con số này tăng lên **`100%`**!
+
+---
+
+## 3. Câu hỏi Phỏng vấn Thực chiến (Kèm Đáp án)
+1. **Hỏi:** *Trên GPU T4, chọn `fp16` hay `bf16` khi train QLoRA, và tại sao?*
+   - **Đáp:** Chọn `fp16`, vì GPU T4 (kiến trúc Turing) không hỗ trợ phần cứng cho `bf16` (chỉ có từ Ampere A100/L4 trở lên). Khi dùng 4-bit NF4, trọng số lưu 4-bit nhưng tính toán giải nén tạm về `float16`.
+2. **Hỏi:** *Tại sao phải cố định `seed` và ghim phiên bản thư viện?*
+   - **Đáp:** Để đảm bảo **Reproducibility** (tái lập được kết quả khi audit hoặc chạy lại pipeline MLOps).
