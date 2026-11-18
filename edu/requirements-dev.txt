@@ -6,3 +6,4 @@ torch
 transformers==5.17.0
 fastapi==0.162.0
 httpx==0.28.1
+pyvi==0.1.1   # tách từ tiếng Việt cho p01kit.vntext.segment (Buổi 12)
