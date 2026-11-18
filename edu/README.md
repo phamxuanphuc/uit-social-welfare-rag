@@ -81,6 +81,34 @@ from p01kit.colab import check_env; check_env()   # cảnh báo nếu sai bản 
 ```
 *Cách B (không dùng GitHub):* tải thư mục `edu/` lên `MyDrive/p01/edu`, rồi `sys.path.insert(0, "/content/drive/MyDrive/p01/edu")`.
 
+## Học trên Colab T4 miễn phí
+Bản miễn phí **không có hạn mức GPU cố định**, phiên có thời gian tối đa (Colab ghi khoảng 12 giờ, thực tế thường ngắn hơn), bị ngắt khi bạn không tương tác một thời gian, và **không chạy nền** khi đóng tab. Mỗi phiên mới là một máy trắng. Lộ trình được thiết kế để chịu được điều đó:
+
+**1. Đừng phí hạn mức GPU**
+- Học xong hoặc chuyển sang đọc lý thuyết/viết báo cáo → giải phóng GPU ngay: *Runtime → Disconnect and delete runtime*, hoặc chạy `from google.colab import runtime; runtime.unassign()`.
+- Phần **không cần GPU** chạy trên runtime CPU (*Runtime → Change runtime type → CPU*): Buổi 01 Ô 1–8 (kho văn bản, chia tập, kiểm toán rò rỉ, bộ chấm, chấm lại output Buổi 00) chỉ cần clone repo ở Ô 0a, không cần cài thư viện; `check_env()` sẽ báo "không thấy GPU" — bỏ qua. Bộ `pytest` chạy trên máy cá nhân.
+- Giữ tab mở trong lúc train; thỉnh thoảng xem log để phiên không bị coi là rảnh.
+
+**2. Bị ngắt giữa buổi → chạy lại ô khởi động rồi chạy lại ô đang dở.** Những phần sau tự nối tiếp, không làm lại việc đã xong:
+
+| Buổi | Cơ chế | Lưu ở `p01_runs/` trên Drive |
+|---|---|---|
+| 03, 05, 06 (quét LR) | Kết quả từng biến thể lưu ngay khi xong (`@resumable`); chạy lại chỉ train biến thể còn thiếu | `m03/results/`, `m05/results/`, `m06/results/` |
+| 06 (`sft_best`), 09 (GRPO) | Checkpoint định kỳ, `resume_point` train tiếp từ checkpoint đầy đủ mới nhất | `m06/ckpt_sft_best/`, `m09/ckpt/` (giữ 1 bản) |
+| 08 | Mẫu on-policy (khối sinh lâu nhất) được đọc lại thay vì sinh lại | `m08_samples.json` |
+| 13 | Điểm từng biến thể GGUF được lưu; file GGUF nằm ở ổ tạm nên phải tạo lại bằng Khối 2–5 | `m13/results/` |
+| 13, 15 | Bản build llama.cpp (2 vCPU biên dịch rất lâu) được nén lên Drive sau lần đầu, các phiên sau chỉ giải nén | `cache/llama.cpp-b12084-sm75-bin.tgz` |
+| Mọi buổi | Bảng điểm **thay** dòng cũ của cùng (buổi, biến thể) thay vì ghi trùng | `leaderboard.csv` |
+
+Muốn chạy lại có chủ đích (đã sửa code): truyền `force=True` cho hàm có `@resumable`, hoặc xóa file kết quả tương ứng. Đừng dùng nó để "đo lại test cho đẹp".
+
+**3. Chia buổi dài thành 2 lần ngồi**
+- **Buổi 08:** lần 1 đến hết Khối 2 (mẫu đã lưu); lần 2 chạy lại Khối 1–3 (Khối 2 đọc file, Khối 3 dựng cặp trong vài giây) rồi DPO/ORPO.
+- **Buổi 09:** GRPO tự lưu checkpoint mỗi 16 bước — dừng lúc nào cũng được.
+- **Buổi 13:** làm Khối 2–6 **trong một lần ngồi** (bản gộp FP16 và các file GGUF ~12 GB nằm ở ổ tạm, không vừa Drive miễn phí); chỉ file `Q4_K_M-imat` được chép lên Drive ở Khối 8.
+
+**4. Dung lượng Drive (15 GB miễn phí):** toàn bộ lộ trình dùng cỡ vài GB (khoảng 20 adapter LoRA ~70 MB, 1 file GGUF ~1,1 GB, checkpoint giữ tối đa 1–2 bản, bản build llama.cpp). Kiểm tra Drive còn trống ≥ 5 GB trước Buổi 13.
+
 ## Bộ dữ liệu P01 (tất định, sinh bằng `python -m p01kit.data`)
 | Tập | Số câu | Nhóm kịch bản | Phải từ chối | Có văn bản hết hạn | Ghi chú |
 |---|---|---|---|---|---|
