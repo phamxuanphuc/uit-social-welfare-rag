@@ -28,17 +28,17 @@ cd - && python -m data_pipeline.vbpl_welfare --raw data/real/raw --out data/real
 
 ## Cách chọn
 
-Tiêu đề chứa một trong các cụm: bảo hiểm xã hội (kể cả tự nguyện), bảo hiểm thất nghiệp, bảo hiểm y tế, trợ giúp / bảo trợ / trợ cấp xã hội, hưu trí xã hội, hộ nghèo / cận nghèo, lao động tự do / phi chính thức / người lao động gặp khó khăn, việc làm. Bỏ bản dịch tiếng Anh; văn bản trùng số ký hiệu + tiêu đề giữ 1.
+Tiêu đề chứa một trong các cụm: bảo hiểm xã hội (kể cả tự nguyện), bảo hiểm thất nghiệp, bảo hiểm y tế, trợ giúp / bảo trợ / trợ cấp xã hội, hưu trí xã hội, hộ nghèo / cận nghèo / chuẩn nghèo, lao động tự do / phi chính thức / người lao động gặp khó khăn, việc làm (trừ "vị trí việc làm" — định biên công chức, viên chức). Bỏ bản dịch tiếng Anh; văn bản trùng số ký hiệu + tiêu đề giữ 1.
 
 ## Số liệu (bản 2026-07-23)
 
 | | |
 |---|---|
-| Văn bản | **2.937** (2.683 có toàn văn; 254 chỉ có PDF trên cổng) |
-| Đoạn truy xuất | **20.478** (trung vị ~800 ký tự) |
-| Hiệu lực | còn hiệu lực 1.289 · hết hiệu lực 1.611 · chưa rõ 37 |
-| Địa bàn | Toàn quốc 845 · 71 tỉnh/thành, quận/huyện · Không rõ 15 |
-| Chủ đề | BHYT 972 · việc làm 670 · trợ giúp xã hội 585 · BHXH 448 · hộ nghèo 438 · BHTN 59 · BHXH tự nguyện 57 · hỗ trợ người lao động 33 · hưu trí xã hội 13 |
+| Văn bản | **2.846** (2.599 có toàn văn; 247 chỉ có PDF trên cổng) |
+| Đoạn truy xuất | **18.829** (trung vị ~800 ký tự) |
+| Hiệu lực | còn hiệu lực 1.227 · hết hiệu lực 1.587 · chưa rõ 32 |
+| Địa bàn | Toàn quốc 790 · 71 tỉnh/thành, quận/huyện · Không rõ 15 |
+| Chủ đề | BHYT 972 · việc làm 551 · trợ giúp xã hội 585 · BHXH 448 · hộ nghèo 466 · BHTN 59 · BHXH tự nguyện 57 · hỗ trợ người lao động 33 · hưu trí xã hội 13 |
 
 Đúng cấu trúc bài toán P01: mỗi văn bản có `region` (`Toàn quốc` hoặc tên tỉnh) để lọc kép, và `validity` (`active`/`expired`) để kiểm tra cảnh báo hết hiệu lực — trên dữ liệu thật, hơn một nửa văn bản đã hết hiệu lực.
 
@@ -48,4 +48,4 @@ Tiêu đề chứa một trong các cụm: bảo hiểm xã hội (kể cả t�
 2. **Ảnh chụp tại 2026-07-23.** Văn bản ban hành sau ngày này không có; trạng thái có thể đã đổi.
 3. **Địa danh theo thời điểm ban hành.** Văn bản trước đợt sắp xếp đơn vị hành chính 2025 mang tên tỉnh cũ (ví dụ Tỉnh Bình Phước). Muốn lọc theo địa bàn hiện hành cần bảng quy đổi tỉnh cũ → tỉnh mới.
 4. **Lọc theo tiêu đề** nên sót văn bản có nội dung an sinh mà tiêu đề không nêu, và có văn bản ít liên quan tới lao động phi chính thức (BHXH cho quân nhân, quản lý quỹ...). Dùng `topics` và `loai_van_ban` để lọc tiếp.
-5. **Văn bản cấp tỉnh chiếm đa số** (2.092/2.937) và nhiều văn bản cũ; văn bản trung ương thường dài và có nhiều Điều.
+5. **Văn bản cấp tỉnh chiếm đa số** (2.056/2.846) và nhiều văn bản cũ; văn bản trung ương thường dài và có nhiều Điều.

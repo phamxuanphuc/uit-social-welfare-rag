@@ -27,6 +27,12 @@ def test_topics_match_title_and_nfd_input():
     assert vw.topics_for_title("Quy hoạch đô thị") == []
 
 
+def test_topics_include_poverty_line_and_skip_civil_service_posts():
+    assert vw.topics_for_title("Nghị định quy định chuẩn nghèo đa chiều giai đoạn 2026 - 2030") == ["ho_ngheo"]
+    assert vw.topics_for_title("Hướng dẫn về vị trí việc làm công chức nghiệp vụ chuyên ngành") == []
+    assert vw.topics_for_title("Quy định chi tiết Luật Việc làm về chính sách hỗ trợ việc làm") == ["viec_lam"]
+
+
 # --- hiệu lực -----------------------------------------------------------------
 
 @pytest.mark.parametrize("raw,want", [("Còn hiệu lực", "active"), ("Hết hiệu lực một phần", "active"),

@@ -37,9 +37,10 @@ TOPICS: dict[str, str] = {
     "bhyt": r"bảo hiểm y tế",
     "tro_giup_xa_hoi": r"trợ giúp xã hội|bảo trợ xã hội|trợ cấp xã hội",
     "huu_tri_xa_hoi": r"hưu trí xã hội",
-    "ho_ngheo": r"hộ nghèo|cận nghèo",
+    "ho_ngheo": r"hộ nghèo|cận nghèo|chuẩn nghèo",
     "ho_tro_nguoi_lao_dong": r"lao động tự do|lao động phi chính thức|người lao động.{0,60}(?:khó khăn|covid)",
-    "viec_lam": r"việc làm",
+    # "vị trí việc làm" là định biên công chức/viên chức, không phải chính sách việc làm
+    "viec_lam": r"(?<!vị trí )việc làm",
 }
 _TOPIC_RE = {k: re.compile(v) for k, v in TOPICS.items()}
 EXCLUDED_TYPES = {"Bản dịch văn bản"}                 # bản dịch tiếng Anh, trùng nội dung bản gốc
