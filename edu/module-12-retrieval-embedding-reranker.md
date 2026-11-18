@@ -8,6 +8,14 @@
 | **Chỉ số đo** | Recall@1/3, MRR (tổng & theo giọng chuẩn/đời thường) · độ chính xác hệ thống đầu-cuối · độ trễ |
 | **Chế độ code** | 🧩 Khối gộp |
 
+### 🎯 Mục tiêu buổi học — sau buổi này bạn làm được
+1. So BM25, dense retriever và reranker trên cùng câu hỏi.
+2. Fine-tune embedding bằng MNRL + hard negatives.
+3. Đo RAG đầu-cuối: "cái giá của truy xuất" so với ngữ cảnh dựng sẵn.
+4. Xử lý tiếng Việt **thật** trên 61.425 điều luật Zalo: NFC, câu không dấu, tách từ.
+
+**✅ Tiêu chí hoàn thành** (tự kiểm trước khi sang buổi sau): Tái lập **đúng** bảng BM25 của Khối 8 (tất định); bảng 5 retriever trên dữ liệu P01; giải thích được rủi ro rò rỉ khi đánh giá mô hình đã được train trên Zalo.
+
 ---
 
 ## 0. Bức tranh lớn
@@ -27,6 +35,8 @@ Số liệu đã đo trên tập test P01 (56 câu trả lời được) với B
 ---
 
 ## 1. Lý thuyết
+
+> 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** BM25 là **tìm sách bằng cách đếm từ trùng** với câu hỏi. Dense retriever **tìm theo ý nghĩa**: hai câu khác chữ nhưng cùng ý vẫn nằm gần nhau. Reranker là **thủ thư đọc kỹ 5 cuốn đầu** rồi xếp lại. Với tiếng Việt, máy so từng mã ký tự — "hỗ trợ" và "ho tro" là hai từ khác hẳn nhau.
 
 ### 1.1. Bi-encoder vs Cross-encoder
 | | Bi-encoder (embedding) | Cross-encoder (reranker) |
@@ -216,6 +226,92 @@ print(f"Hệ thống đầu-cuối: đúng {sys_acc:.3f} | trích nhầm văn b�
 - 📌 So `sys_acc` với `answer_acc` của `sft_best` trên ngữ cảnh dựng sẵn (Buổi 06): khoảng chênh chính là **cái giá của truy xuất**.
 
 ---
+
+### Khối 8 — 🇻🇳 Thực chiến dữ liệu thật: Zalo AI Legal Retrieval (61.425 điều luật, 788 câu hỏi thật)
+Các khối trên dùng kho 23 văn bản giả lập. Đi làm, bạn sẽ gặp kho **hàng chục nghìn văn bản thật** và câu hỏi do người thật viết. Khối này dùng bộ [`GreenNode/zalo-ai-legal-text-retrieval-vn`](https://huggingface.co/datasets/GreenNode/zalo-ai-legal-text-retrieval-vn) (giấy phép MIT, từ cuộc thi Zalo AI 2021) — **chỉ cần CPU**, chạy được trên runtime CPU để tiết kiệm hạn mức GPU.
+
+```bash
+!pip install -q bm25s==0.3.16 pyvi==0.1.1
+```
+```python
+import unicodedata
+from collections import Counter
+import pandas as pd, bm25s
+from huggingface_hub import hf_hub_download
+from p01kit.vntext import normalize, segment, syllables, has_nfd, tone_style
+from p01kit.retrieval import hit_at_k, mrr_at_k
+ZALO = "GreenNode/zalo-ai-legal-text-retrieval-vn"
+get = lambda f: pd.read_parquet(hf_hub_download(ZALO, f, repo_type="dataset"))
+z_corpus, z_queries, z_qrels = (get(f"{x}/test-00000-of-00001.parquet") for x in ("corpus", "queries", "qrels"))
+z_gold = z_qrels.groupby("query-id")["corpus-id"].apply(set).to_dict()
+print(len(z_queries), "dòng câu hỏi,", z_queries["id"].nunique(), "id khác nhau")      # bộ công khai cũng có dòng trùng!
+z_queries = z_queries[z_queries["id"].isin(z_gold)].drop_duplicates("id").reset_index(drop=True)
+z_docs = (z_corpus["title"].fillna("") + ". " + z_corpus["text"].fillna("")).tolist()
+z_ids, z_qs = z_corpus["id"].tolist(), z_queries["text"].tolist()
+z_gs = [z_gold[i] for i in z_queries["id"]]
+tones = Counter()
+for d in z_docs:
+    tones.update(tone_style(d))
+print("Văn bản có NFD:", sum(map(has_nfd, z_docs)), "| số từ oa/oe/uy theo kiểu đặt dấu:", dict(tones))
+```
+```python
+def bm25_eval(doc_tok, q_tok):
+    ret = bm25s.BM25(); ret.index(doc_tok, show_progress=False)
+    res, _ = ret.retrieve(q_tok, k=100, show_progress=False)
+    ranked = [[z_ids[j] for j in row] for row in res]
+    return {f"hit@{k}": round(hit_at_k(ranked, z_gs, k), 3) for k in (1, 10, 100)} | {"mrr@10": round(mrr_at_k(ranked, z_gs, 10), 3)}
+low = lambda t: [w.lower() for w in syllables(t)]
+nfc_docs = [low(normalize(d, tone=None)) for d in z_docs]
+nfd_qs = [unicodedata.normalize("NFD", x) for x in z_qs]                      # mô phỏng câu dán từ PDF/macOS
+no_accent_qs = [low(normalize(x, diacritics=False)) for x in z_qs]          # mô phỏng người gõ không dấu
+real = {"A. âm tiết + NFC": bm25_eval(nfc_docs, [low(normalize(x, tone=None)) for x in z_qs]),
+        "B. câu hỏi NFD, KHÔNG chuẩn hóa": bm25_eval(nfc_docs, [low(x) for x in nfd_qs]),
+        "C. câu hỏi NFD + NFC": bm25_eval(nfc_docs, [low(normalize(x, tone=None)) for x in nfd_qs]),
+        "D. + thống nhất dấu thanh": bm25_eval([low(normalize(d)) for d in z_docs], [low(normalize(x)) for x in z_qs]),
+        "E. câu hỏi không dấu, kho có dấu": bm25_eval(nfc_docs, no_accent_qs),
+        "F. bỏ dấu cả hai phía": bm25_eval([low(normalize(d, diacritics=False)) for d in z_docs], no_accent_qs)}
+seg_docs = [[w.lower() for w in segment(normalize(d))] for d in z_docs]       # pyvi: ~1,5 phút trên CPU laptop
+seg_qs = [[w.lower() for w in segment(normalize(x))] for x in z_qs]
+real["G. tách từ (pyvi)"] = bm25_eval(seg_docs, seg_qs)
+real["H. âm tiết + từ"] = bm25_eval([a + b for a, b in zip([low(normalize(d)) for d in z_docs], seg_docs)],
+                                     [low(normalize(x)) + s for x, s in zip(z_qs, seg_qs)])
+for k, v in real.items():
+    print(f"{k:<34} {v}")
+```
+- 📌 **Kết quả đã đo** (tất định — BM25 không có ngẫu nhiên; `bm25s==0.3.16`, `pyvi==0.1.1`, Python 3.12, CPU; chính đoạn code trên đã được chạy trên dữ liệu thật ngày 18/11/2026 và in ra đúng các số này). Bạn chạy lại phải ra **đúng** như vậy:
+
+| Cách xử lý | hit@1 | hit@10 | hit@100 | MRR@10 |
+|---|---|---|---|---|
+| A. âm tiết + NFC (mốc) | 0,435 | 0,822 | 0,964 | 0,570 |
+| B. câu hỏi NFD, **không** chuẩn hóa | 0,001 | **0,015** | 0,166 | 0,004 |
+| C. câu hỏi NFD + NFC | 0,435 | 0,822 | 0,964 | 0,570 |
+| D. + thống nhất dấu thanh | 0,437 | 0,824 | 0,964 | 0,570 |
+| E. câu hỏi **không dấu**, kho có dấu | 0,013 | **0,082** | 0,265 | 0,029 |
+| F. bỏ dấu cả hai phía | 0,359 | 0,765 | 0,928 | 0,491 |
+| G. tách từ (pyvi) | 0,448 | **0,858** | 0,972 | 0,582 |
+| H. âm tiết + từ | **0,471** | 0,858 | 0,973 | **0,604** |
+
+- 🧒 **Feynman:** máy không "nhìn" chữ như người — nó so **từng mã số**. "ộ" dựng sẵn và "o + ^ + ." là hai dãy mã khác nhau dù trông y hệt (dòng B: gần như **không tìm được gì**). Một dòng `unicodedata.normalize("NFC", ...)` sửa hết (dòng C). Tương tự, "ho tro" và "hỗ trợ" là hai từ khác hẳn với máy (dòng E).
+- **Đọc bảng như một kỹ sư:**
+  - Kho Zalo **không có** chuỗi NFD nào, nhưng dữ liệu của công ty bạn (PDF, Word cũ, macOS) thì có thể có → **luôn NFC ở cả lúc nạp kho lẫn lúc nhận câu hỏi**. Chi phí 1 dòng code, rủi ro nếu quên: mất ~98% kết quả.
+  - Kho đặt dấu **kiểu cũ** áp đảo (trong 61.425 văn bản đo được 112.506 từ kiểu cũ "hòa, thủy" so với 6.514 từ kiểu mới "hoà, thuỷ"; 1.184 văn bản trộn cả hai) — vì câu hỏi cũng chủ yếu kiểu cũ nên thống nhất dấu thanh chỉ thêm +0,002 hit@10 (dòng D). Với dữ liệu trộn nhiều hơn, lợi ích sẽ lớn hơn: **đo trên dữ liệu của bạn**, đừng đoán.
+  - Người dùng gõ không dấu là chuyện hằng ngày. Bỏ dấu cả hai phía (F) cứu từ 0,082 lên 0,765, nhưng mất 5,7 điểm so với có dấu vì "bảo/bão/báo" trùng nhau → hệ thống thật thường **đánh chỉ mục cả hai dạng** hoặc phục hồi dấu cho câu hỏi.
+  - Tách từ (G) +3,6 điểm hit@10 vì "bảo_hiểm" là **một** đơn vị nghĩa; ghép âm tiết + từ (H) cho hit@1 và MRR tốt nhất — đó là lý do PhoBERT và các bi-encoder tiếng Việt đòi đầu vào đã tách từ.
+- ⚠️ **Bộ công khai cũng bẩn:** tập câu hỏi có 818 dòng nhưng chỉ 788 câu khác nhau. Không khử trùng thì mẫu số sai và câu trùng được tính hai lần.
+
+```python
+from sentence_transformers import SentenceTransformer
+bkai = SentenceTransformer("bkai-foundation-models/vietnamese-bi-encoder", device="cuda")
+bkai.max_seq_length = 256
+D = bkai.encode([" ".join(s) for s in seg_docs], batch_size=128, normalize_embeddings=True, show_progress_bar=True)
+Q = bkai.encode([" ".join(s) for s in seg_qs], batch_size=128, normalize_embeddings=True)
+top = (Q @ D.T).argsort(axis=1)[:, ::-1][:, :100]
+ranked = [[z_ids[j] for j in row] for row in top]
+real["I. vietnamese-bi-encoder (dense)"] = {f"hit@{k}": round(hit_at_k(ranked, z_gs, k), 3) for k in (1, 10, 100)} | {"mrr@10": round(mrr_at_k(ranked, z_gs, 10), 3)}
+print(real["I. vietnamese-bi-encoder (dense)"])
+```
+- **Giải thích:** mô hình PhoBERT nhận **từ đã tách** (`bảo_hiểm xã_hội`) — ta dùng lại `seg_docs` của dòng G. Cần GPU (mã hóa 61.425 đoạn); ghi số của bạn vào bảng trên.
+- ⚠️ **Đọc model card trước khi tin con số.** Model card của `vietnamese-bi-encoder` ghi mô hình được huấn luyện trên **80% tập train của Zalo Legal 2021**. Nếu câu hỏi đánh giá trùng với dữ liệu huấn luyện của mô hình, điểm cao là do **rò rỉ** chứ không phải do giỏi. Trước khi kết luận "dense thắng BM25", kiểm tra xem tập bạn đánh giá có nằm trong dữ liệu huấn luyện của mô hình không — đó là câu hỏi phỏng vấn rất hay gặp.
 
 ## 3. So sánh hiệu quả
 
