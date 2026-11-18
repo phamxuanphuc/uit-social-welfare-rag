@@ -128,5 +128,81 @@ def guess_topic(question: str) -> str | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Dữ liệu & chấm điểm cho agent gọi tool (Buổi 11)
+# ---------------------------------------------------------------------------
+from .data import ESCALATION_PLACE, FORMAL_TEMPLATES  # noqa: E402
+
+AGENT_SYSTEM = ("Bạn là trợ lý an sinh xã hội P01. Với câu hỏi về chính sách an sinh, LUÔN gọi lookup_policy "
+                "với đúng địa bàn đã chọn và mã chủ đề trước khi trả lời. Câu hỏi ngoài phạm vi thì từ chối, "
+                "không gọi tool. Văn bản hết hiệu lực phải cảnh báo rõ.")
+FOLLOW_UP = "Vậy hồ sơ nộp ở đâu ạ?"
+
+
+def final_answer(result: dict | None, region: str) -> str:
+    if result is None:
+        return "Câu hỏi này nằm ngoài phạm vi tra cứu chính sách an sinh. " + ESCALATION_PLACE
+    if not result.get("found"):
+        return f"Hiện không có văn bản an sinh phù hợp cho địa bàn {region}. " + ESCALATION_PLACE
+    head = (f"⚠️ Văn bản {result['doc_code']} đã HẾT HIỆU LỰC — thông tin chỉ để tham khảo, cần cán bộ xác minh. "
+            if result["status"] == "expired" else f"Theo {result['doc_code']} ({result['article']}): ")
+    return (head + result["benefit"] + " Hồ sơ gồm: " + "; ".join(result["required_documents"])
+            + f". Nơi nộp: {result['submission_place']}.")
+
+
+def follow_up_answer(result: dict | None) -> str:
+    if not result or not result.get("found"):
+        return ESCALATION_PLACE
+    return f"Bạn nộp tại {result['submission_place']}."
+
+
+def agent_conversation(row: dict, two_turns: bool = True) -> list[dict]:
+    """Hội thoại huấn luyện chuẩn Qwen3: user -> tool_call -> tool -> trả lời (-> hỏi tiếp -> trả lời)."""
+    msgs = [{"role": "system", "content": AGENT_SYSTEM},
+            {"role": "user", "content": f"Địa bàn đã chọn: {row['region']}\nCâu hỏi: {row['question']}"}]
+    if row.get("topic") is None:
+        msgs.append({"role": "assistant", "content": final_answer(None, row["region"])})
+        return msgs
+    args = {"region": row["region"], "topic": row["topic"]}
+    result = lookup_policy(**args)
+    msgs += [{"role": "assistant", "content": "", "tool_calls": [{"type": "function", "function": {"name": "lookup_policy", "arguments": args}}]},
+             {"role": "tool", "content": json.dumps(result, ensure_ascii=False)},
+             {"role": "assistant", "content": final_answer(result, row["region"])}]
+    if two_turns:
+        msgs += [{"role": "user", "content": FOLLOW_UP}, {"role": "assistant", "content": follow_up_answer(result)}]
+    return msgs
+
+
+def not_found_rows() -> list[dict]:
+    """Các cặp (địa bàn, chủ đề) KHÔNG có văn bản nào -> dạy agent xử lý kết quả rỗng."""
+    c = _corpus()
+    rows = []
+    for code, region in c.regions.items():
+        if code == "TQ":
+            continue
+        for topic in c.topics:
+            if resolve(topic, code, c.policies) is None:
+                p = next(x for x in c.policies if x.topic == topic)
+                for k, tpl in enumerate(FORMAL_TEMPLATES["ho_so"][:2]):
+                    rows.append({"id": f"NF-{code}-{topic}-{k}", "region": region, "region_code": code, "topic": topic,
+                                 "question": tpl.format(benefit_name=p.benefit_name)})
+    return rows
+
+
+def score_tool_call(output: str, row: dict) -> dict:
+    """Chấm lượt đầu của agent: có gọi tool khi cần, đúng tên, đúng địa bàn, đúng chủ đề."""
+    calls = [c for c in parse_tool_calls(output) if c.get("name")]
+    should = row.get("topic") is not None
+    if not should:
+        return {"should_call": False, "called": bool(calls), "ok": not calls}
+    c = calls[0] if calls else {}
+    a = c.get("arguments") or {}
+    res = {"should_call": True, "called": bool(calls), "name_ok": c.get("name") == "lookup_policy",
+           "region_ok": a.get("region") == row["region"], "topic_ok": a.get("topic") == row["topic"]}
+    res["ok"] = res["called"] and res["name_ok"] and res["region_ok"] and res["topic_ok"]
+    return res
+
+
 __all__ = ["TOOLS", "lookup_policy", "check_document_status", "parse_tool_calls", "execute_tool_call",
-           "run_agent", "guess_topic", "applicable"]
+           "run_agent", "guess_topic", "applicable", "AGENT_SYSTEM", "FOLLOW_UP", "final_answer",
+           "agent_conversation", "not_found_rows", "score_tool_call"]

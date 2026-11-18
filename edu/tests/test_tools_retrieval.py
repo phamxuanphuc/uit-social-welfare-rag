@@ -36,6 +36,27 @@ def test_parse_and_run_agent():
     assert res["messages"][2]["role"] == "tool"
 
 
+def test_agent_conversation_and_scoring(splits):
+    from p01kit.tools import agent_conversation, not_found_rows, score_tool_call
+
+    r = next(x for x in splits["train"] if x["is_expired"])
+    conv = agent_conversation(r)
+    assert [m["role"] for m in conv] == ["system", "user", "assistant", "tool", "assistant", "user", "assistant"]
+    assert conv[2]["tool_calls"][0]["function"]["arguments"] == {"region": r["region"], "topic": r["topic"]}
+    assert "HẾT HIỆU LỰC" in conv[4]["content"]
+    ood = next(x for x in splits["train"] if x["topic"] is None)
+    assert [m["role"] for m in agent_conversation(ood)] == ["system", "user", "assistant"]
+    nf = not_found_rows()
+    assert {(x["region_code"], x["topic"]) for x in nf} == {("CT", "mat_viec"), ("HCM", "thien_tai"), ("DN", "thien_tai"), ("DN", "hoc_phi")}
+    assert "Không có" not in agent_conversation(nf[0])[4]["content"] and "Hiện không có" in agent_conversation(nf[0])[4]["content"]
+    good = ('<tool_call>\n{"name": "lookup_policy", "arguments": {"region": "%s", "topic": "%s"}}\n</tool_call>'
+            % (r["region"], r["topic"]))
+    assert score_tool_call(good, r)["ok"]
+    assert not score_tool_call(good.replace(r["topic"], "vay_von"), r)["ok"]
+    assert score_tool_call("Xin lỗi, ngoài phạm vi.", ood)["ok"]
+    assert not score_tool_call(good, ood)["ok"]
+
+
 def test_guess_topic():
     assert guess_topic("Tui chạy xe ôm bị té xe gãy tay") == "tai_nan"
     assert guess_topic("Xin hỗ trợ tiền phòng trọ") == "tien_tro"
