@@ -7,6 +7,7 @@ nhất là cài thư viện (có thể kéo theo bản `torch` khác) và biên 
 from __future__ import annotations
 
 import importlib.metadata as md
+import json
 import re
 import shutil
 import subprocess
@@ -148,3 +149,38 @@ def restore_llamacpp_build(build_dir: str | Path = LLAMA_CPP_BUILD, cache: str |
     if not ok:
         shutil.rmtree(build_dir / "bin", ignore_errors=True)
     return ok
+
+
+# ---------------------------------------------------------------------------
+# Gom kết quả để gửi lại (điền "Kết quả đã đo" vào bài học) — chỉ file nhỏ, không adapter/GGUF
+# ---------------------------------------------------------------------------
+
+EXPORT_PATTERNS = ("leaderboard.csv", "outputs/*.json", "*/results/*.json", "*/*/selection.json",
+                   "m07/data/data_card.json", "m13/gguf/quant_report.json", "m14/release/release_dossier.json",
+                   "m14/release/MODEL_CARD.md", "m15/ops/ops_report.json", "m15/gate/scores.json")
+
+
+def export_results(runs: str | Path | None = None, dest: str | Path | None = None) -> Path:
+    """Nén bảng điểm, output từng câu và các báo cáo JSON thành một file zip nhỏ (vài MB).
+
+    Không chứa adapter, checkpoint, GGUF hay dữ liệu cá nhân — chỉ output của mô hình trên tập test giả lập.
+    """
+    import time
+    import zipfile
+
+    if runs is None:
+        from .modeling import runs_dir
+
+        runs = runs_dir()
+    runs = Path(runs)
+    files = sorted({p for pat in EXPORT_PATTERNS for p in runs.glob(pat) if p.is_file()})
+    if not files:
+        raise FileNotFoundError(f"Không thấy kết quả nào trong {runs} — đã chạy buổi nào chưa?")
+    dest = Path(dest) if dest else runs / "export" / f"p01_results_{time.strftime('%Y%m%d_%H%M')}.zip"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as z:
+        for p in files:
+            z.write(p, p.relative_to(runs))
+        z.writestr("ENV.json", json.dumps(installed_versions(list(read_pins()) + ["torch"]), indent=1))
+    print(f"Đã gom {len(files)} file → {dest} ({dest.stat().st_size / 1e6:.1f} MB)")
+    return dest

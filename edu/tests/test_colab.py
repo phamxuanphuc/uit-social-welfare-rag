@@ -60,3 +60,29 @@ def test_restore_fails_without_cache_or_with_broken_binary(tmp_path):
     cache = save_llamacpp_build(build, tmp_path / "c.tgz")
     assert not restore_llamacpp_build(tmp_path / "b", cache)
     assert not (tmp_path / "b" / "bin").exists()                         # xóa bản hỏng → ô biên dịch sẽ build lại
+
+
+def test_export_results_keeps_small_result_files_only(tmp_path):
+    import zipfile
+
+    from p01kit.colab import export_results
+
+    runs = tmp_path / "p01_runs"
+    for rel, data in {"leaderboard.csv": "module,variant\n", "outputs/M00__base-zero-shot.json": "[]",
+                      "m03/results/V2_dora_r16.json": "{}", "m06/sft_best/selection.json": "{}",
+                      "m06/sft_best/adapter_model.safetensors": "x" * 1000, "m13/gguf/p01-Q4_K_M-imat.gguf": "x",
+                      "m09/ckpt/checkpoint-16/optimizer.pt": "x"}.items():
+        (runs / rel).parent.mkdir(parents=True, exist_ok=True)
+        (runs / rel).write_text(data)
+    names = set(zipfile.ZipFile(export_results(runs, tmp_path / "out.zip")).namelist())
+    assert {"leaderboard.csv", "outputs/M00__base-zero-shot.json", "m03/results/V2_dora_r16.json",
+            "m06/sft_best/selection.json", "ENV.json"} == names
+
+
+def test_export_results_without_any_run(tmp_path):
+    import pytest
+
+    from p01kit.colab import export_results
+
+    with pytest.raises(FileNotFoundError):
+        export_results(tmp_path, tmp_path / "x.zip")

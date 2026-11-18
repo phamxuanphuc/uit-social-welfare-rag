@@ -109,6 +109,12 @@ Muốn chạy lại có chủ đích (đã sửa code): truyền `force=True` ch
 
 **4. Dung lượng Drive (15 GB miễn phí):** toàn bộ lộ trình dùng cỡ vài GB (khoảng 20 adapter LoRA ~70 MB, 1 file GGUF ~1,1 GB, checkpoint giữ tối đa 1–2 bản, bản build llama.cpp). Kiểm tra Drive còn trống ≥ 5 GB trước Buổi 13.
 
+**5. Chạy xong một buổi (hoặc cả khóa) → gom kết quả để đối chiếu:**
+```python
+from p01kit.colab import export_results; export_results()
+```
+File zip vài MB ở `p01_runs/export/` trên Drive gồm bảng điểm, **output từng câu** của mọi lượt, các báo cáo JSON (`selection.json`, `quant_report.json`, `release_dossier.json`, `ops_report.json`…) và phiên bản thư viện đã cài — **không** có adapter, checkpoint hay GGUF. Gửi file này cho người phụ trách khóa để các buổi cần GPU có bảng "📌 Kết quả đã đo" thật như Buổi 01 và 12, và để so kết quả của bạn với lượt chạy tham chiếu.
+
 ## Bộ dữ liệu P01 (tất định, sinh bằng `python -m p01kit.data`)
 | Tập | Số câu | Nhóm kịch bản | Phải từ chối | Có văn bản hết hạn | Ghi chú |
 |---|---|---|---|---|---|
