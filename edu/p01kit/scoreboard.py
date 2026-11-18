@@ -34,12 +34,14 @@ def record(module: str, variant: str, summary: dict, path: str | Path | None = N
             row[c] = summary[c]
     if "acc_unseen_doc" in summary and summary["acc_unseen_doc"] is not None:
         row["acc_unseen_doc"] = summary["acc_unseen_doc"]
-    new = not path.exists()
-    with open(path, "a", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=COLUMNS)
-        if new:
-            w.writeheader()
-        w.writerow(row)
+    # Chạy lại một ô (ví dụ sau khi Colab ngắt) THAY dòng cũ của cùng (module, variant) thay vì ghi trùng.
+    rows = [r for r in load(path) if (r.get("module"), r.get("variant")) != (module, variant)] + [row]
+    tmp = path.with_suffix(".tmp")
+    with open(tmp, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=COLUMNS, extrasaction="ignore")
+        w.writeheader()
+        w.writerows(rows)
+    os.replace(tmp, path)
     return row
 
 
