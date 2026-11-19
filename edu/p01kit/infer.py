@@ -62,7 +62,9 @@ def show_errors(result: dict, rows: list[dict], k: int = 5) -> None:
     for out, s, r in zip(result["outputs"], result["scores"], rows):
         if s["answer_ok"] and s.get("strict_ok", True):
             continue
-        print(f"--- {r['id']} | {r['style']} | gold_refusal={r['gold']['is_refusal']} gold_doc={r['gold']['doc_code']}")
+        print(f"--- {r['id']} | {r['style']} | địa bàn={r['region']} | "
+              f"gold_refusal={r['gold']['is_refusal']} gold_doc={r['gold']['doc_code']} "
+              f"gold_expired={r['gold']['expired_warning']}")
         print("Q:", r["question"])
         print("OUT:", out[:400].replace("\n", " "))
         shown += 1
