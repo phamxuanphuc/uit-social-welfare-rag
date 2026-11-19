@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sơ đồ Kiến trúc &amp; Luồng Suy luận — Buổi 00: Qwen3-1.7B trên Colab T4</title>
+<style>
+:root {
+  --bg: #F3F5F8;
+  --stage: #FFFFFF;
+  --surface: #EDF1F6;
+  --ink: #0F172A;
+  --muted: #475569;
+  --rule: #CBD5E1;
+  --rule-strong: #94A3B8;
+  --accent: #124E96;
+  --accent-soft: #E5EFFB;
+  --teal: #0D7A6D;
+  --teal-soft: #E3F5F2;
+  --amber: #B45309;
+  --amber-soft: #FEF3DF;
+  --red: #B91C1C;
+  --red-soft: #FEECEC;
+  --grid: rgba(15, 23, 42, 0.045);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0B111A;
+    --stage: #111A27;
+    --surface: #182334;
+    --ink: #E6EDF6;
+    --muted: #94A3B8;
+    --rule: #263549;
+    --rule-strong: #475D7A;
+    --accent: #60A5FA;
+    --accent-soft: #172B47;
+    --teal: #34D399;
+    --teal-soft: #102D27;
+    --amber: #FBBF24;
+    --amber-soft: #2E220D;
+    --red: #F87171;
+    --red-soft: #31161A;
+    --grid: rgba(226, 232, 240, 0.04);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0B111A;
+  --stage: #111A27;
+  --surface: #182334;
+  --ink: #E6EDF6;
+  --muted: #94A3B8;
+  --rule: #263549;
+  --rule-strong: #475D7A;
+  --accent: #60A5FA;
+  --accent-soft: #172B47;
+  --teal: #34D399;
+  --teal-soft: #102D27;
+  --amber: #FBBF24;
+  --amber-soft: #2E220D;
+  --red: #F87171;
+  --red-soft: #31161A;
+  --grid: rgba(226, 232, 240, 0.04);
+}
+
+:root[data-theme="light"] {
+  --bg: #F3F5F8;
+  --stage: #FFFFFF;
+  --surface: #EDF1F6;
+  --ink: #0F172A;
+  --muted: #475569;
+  --rule: #CBD5E1;
+  --rule-strong: #94A3B8;
+  --accent: #124E96;
+  --accent-soft: #E5EFFB;
+  --teal: #0D7A6D;
+  --teal-soft: #E3F5F2;
+  --amber: #B45309;
+  --amber-soft: #FEF3DF;
+  --red: #B91C1C;
+  --red-soft: #FEECEC;
+  --grid: rgba(15, 23, 42, 0.045);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.num, code {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+code {
+  font-size: 0.85em;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.08em 0.35em;
+}
+
+.page {
+  max-width: 1260px;
+  margin: 0 auto;
+  padding: 20px 18px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  background: var(--stage);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.2vw, 1.55rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn {
+  appearance: none;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 5px;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn.active, .btn[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #FFFFFF;
+}
+
+:root[data-theme="dark"] .btn.active,
+:root[data-theme="dark"] .btn[aria-pressed="true"] { color: #0B111A; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn.active,
+  :root:not([data-theme="light"]) .btn[aria-pressed="true"] { color: #0B111A; }
+}
+
+.panel {
+  background: var(--stage);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-head {
+  padding: 12px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.panel-head-title {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.panel-head p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.svg-viewport {
+  width: 100%;
+  overflow-x: auto;
+  background-color: var(--stage);
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  padding: 14px 12px 10px;
+}
+
+.arch-svg {
+  display: block;
+  width: 100%;
+  min-width: 1020px;
+  height: auto;
+  font-family: var(--font-sans);
+}
+
+.arch-svg .mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.node-group {
+  cursor: pointer;
+}
+
+.node-box {
+  fill: var(--stage);
+  stroke: var(--rule-strong);
+  stroke-width: 1.5;
+  transition: stroke 160ms ease, fill 160ms ease, stroke-width 160ms ease;
+}
+
+.node-box.teal {
+  fill: var(--teal-soft);
+  stroke: var(--teal);
+}
+
+.node-box.amber {
+  fill: var(--amber-soft);
+  stroke: var(--amber);
+}
+
+.node-box.accent-tint {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+
+.node-group:hover .node-box {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+}
+
+.node-group.selected .node-box {
+  stroke: var(--accent);
+  stroke-width: 2.8;
+}
+
+.node-sub {
+  fill: var(--surface);
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.node-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+.node-tag.teal { fill: var(--teal); }
+.node-tag.amber { fill: var(--amber); }
+
+.node-title {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+
+.node-text {
+  font-size: 11px;
+  fill: var(--muted);
+}
+
+.node-code {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--ink);
+}
+
+.edge {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1.7;
+  transition: stroke 160ms ease, stroke-width 160ms ease;
+}
+
+.edge.active {
+  stroke: var(--accent);
+  stroke-width: 2.6;
+}
+
+.edge.tie {
+  stroke: var(--teal);
+  stroke-dasharray: 5 4;
+  stroke-width: 1.6;
+}
+
+.edge.loop {
+  stroke: var(--accent);
+  stroke-dasharray: 6 4;
+  stroke-width: 1.8;
+}
+
+.edge-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--muted);
+}
+
+.edge-label.teal { fill: var(--teal); font-weight: 700; }
+.edge-label.accent { fill: var(--accent); font-weight: 700; }
+
+.inspector {
+  border-top: 1px solid var(--rule);
+  background: var(--surface);
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.insp-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.insp-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.badge.teal { background: var(--teal-soft); color: var(--teal); border-color: var(--teal); }
+.badge.amber { background: var(--amber-soft); color: var(--amber); border-color: var(--amber); }
+
+.insp-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.fact {
+  background: var(--stage);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fact span {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.fact strong {
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+}
+
+.legend-strip {
+  padding: 8px 18px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  background: var(--stage);
+}
+
+.leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.leg-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1.5px solid var(--rule-strong);
+  display: inline-block;
+}
+
+.leg-dot.teal { background: var(--teal-soft); border-color: var(--teal); }
+.leg-dot.amber { background: var(--amber-soft); border-color: var(--amber); }
+.leg-dot.accent { background: var(--accent-soft); border-color: var(--accent); }
+
+.two-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.panel-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bar-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.84rem;
+  gap: 8px;
+}
+
+.bar-track {
+  height: 24px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  display: flex;
+  overflow: hidden;
+}
+
+.bar-seg {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: width 180ms ease;
+}
+
+.seg-accent { background: var(--accent); }
+.seg-teal { background: var(--teal); }
+.seg-amber { background: var(--amber); }
+.seg-red { background: var(--red); }
+
+:root[data-theme="dark"] .bar-seg { color: #0B111A; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .bar-seg { color: #0B111A; }
+}
+
+.xray-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.xray-row {
+  display: grid;
+  grid-template-columns: 78px 1fr 52px;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.xray-bar-bg {
+  height: 16px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.xray-bar-fg {
+  height: 100%;
+  background: var(--accent);
+  transition: width 160ms ease;
+}
+
+.pad-scroll { overflow-x: auto; }
+
+.pad-matrix {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+}
+
+.pad-matrix td {
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 4px 5px;
+  text-align: center;
+  background: var(--stage);
+  white-space: pre;
+}
+
+.pad-matrix td.lbl {
+  border: none;
+  background: none;
+  text-align: left;
+  font-weight: 700;
+  color: var(--muted);
+  padding-right: 6px;
+}
+
+.pad-matrix td.pad { background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
+.pad-matrix td.gen-ok { background: var(--teal-soft); border-color: var(--teal); color: var(--teal); font-weight: 700; }
+.pad-matrix td.gen-bad { background: var(--red-soft); border-color: var(--red); color: var(--red); font-weight: 700; }
+
+.flow-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.flow-card {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.flow-card strong { font-size: 0.88rem; }
+.flow-card p { margin: 0; font-size: 0.8rem; color: var(--muted); }
+
+.err-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.err-chip {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--stage);
+  border: 1px solid var(--rule);
+}
+
+@media (max-width: 960px) {
+  .inspector, .two-panels, .flow-strip {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="header">
+    <div class="header-title">
+      <span class="kicker">Sơ đồ hệ thống · Buổi 00 · Qwen/Qwen3-1.7B · Colab T4 (15 GB)</span>
+      <h1>Kiến trúc <code>Qwen3-1.7B</code>, Vòng lặp Sinh Token &amp; Đường ống Baseline P01</h1>
+      <p class="subtitle">Bấm trực tiếp vào từng khối hoặc chạy từng bước để xem kích thước tensor, tham số, lượng VRAM và ô code tương ứng.</p>
+    </div>
+    <div class="toolbar">
+      <button id="theme-btn" class="btn" type="button" aria-label="Đổi giao diện sáng tối">Chủ đề: Tự động</button>
+    </div>
+  </header>
+
+  <section class="panel" aria-labelledby="s1-title">
+    <div class="panel-head">
+      <div class="panel-head-title">
+        <h2 id="s1-title">1. Giải phẫu Luồng Suy luận &amp; Vòng lặp Tự hồi quy (Ô 2 – Ô 9)</h2>
+        <p>Tương tác: chọn khối trên sơ đồ, bật/tắt 4-bit NF4 và chế độ <code>enable_thinking</code> để đối chiếu trực tiếp.</p>
+      </div>
+      <div class="toolbar">
+        <button id="step-prev" class="btn" type="button">← Bước trước</button>
+        <button id="step-play" class="btn" type="button" aria-pressed="false">Phát vòng lặp</button>
+        <button id="step-next" class="btn" type="button">Bước tiếp →</button>
+        <button id="quant-toggle" class="btn active" type="button" aria-pressed="true">Trọng số: NF4 (1,35 GB)</button>
+        <button id="think-toggle" class="btn" type="button" aria-pressed="false">Thinking: Tắt</button>
+      </div>
+    </div>
+
+    <div class="svg-viewport">
+      <svg id="arch-svg" class="arch-svg" viewBox="0 0 1180 410" role="img" aria-label="Sơ đồ luồng suy luận Qwen3-1.7B gồm 6 bước từ Chat Template, Tokenizer, Embedding FP16, 28 lớp Transformer NF4 với GQA và MLP, lớp đầu ra lm_head dùng chung trọng số tới Softmax và vòng lặp nối token">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--rule-strong)"/>
+          </marker>
+          <marker id="arr-active" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--accent)"/>
+          </marker>
+          <marker id="arr-teal" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--teal)"/>
+          </marker>
+        </defs>
+
+        <path id="tie-edge" class="edge tie" d="M 412 108 L 412 44 L 845 44 L 845 108" marker-start="url(#arr-teal)" marker-end="url(#arr-teal)"/>
+        <rect x="526" y="31" width="212" height="22" rx="4" fill="var(--stage)" stroke="var(--teal)" stroke-width="1"/>
+        <text x="632" y="46" text-anchor="middle" class="edge-label teal">tie_word_embeddings = true (tiết kiệm 0,31B)</text>
+
+        <path id="edge-1-2" class="edge" d="M 176 196 L 204 196" marker-end="url(#arr)"/>
+        <path id="edge-2-3" class="edge" d="M 338 196 L 364 196" marker-end="url(#arr)"/>
+        <path id="edge-3-4" class="edge" d="M 464 196 L 492 196" marker-end="url(#arr)"/>
+        <path id="edge-4-5" class="edge" d="M 762 196 L 792 196" marker-end="url(#arr)"/>
+        <path id="edge-5-6" class="edge" d="M 902 196 L 932 196" marker-end="url(#arr)"/>
+
+        <path id="edge-loop" class="edge loop" d="M 1046 286 L 1046 364 L 270 364 L 270 288" marker-end="url(#arr-active)"/>
+        <rect x="498" y="351" width="320" height="22" rx="4" fill="var(--stage)" stroke="var(--accent)" stroke-width="1"/>
+        <text x="658" y="366" text-anchor="middle" class="edge-label accent">Nối 1 token vào cuối chuỗi → lặp tới &lt;|im_end|&gt; (151645)</text>
+
+        <g class="node-group selected" data-step="0" tabindex="0" role="button" aria-label="Bước 1: Chat Template và công tắc Thinking">
+          <rect class="node-box accent-tint" x="16" y="108" width="160" height="176" rx="6"/>
+          <text class="node-tag" x="28" y="128">BƯỚC 1 · Ô 8–9</text>
+          <text class="node-title" x="28" y="148">Chat Template</text>
+          <text class="node-text" x="28" y="167">Bọc vai trò hội thoại</text>
+          <rect class="node-sub" x="26" y="178" width="140" height="44" rx="4"/>
+          <text class="node-code" x="34" y="195">&lt;|im_start|&gt;user</text>
+          <text class="node-code" x="34" y="211">...&lt;|im_end|&gt;</text>
+          <rect id="svg-think-box" class="node-sub" x="26" y="230" width="140" height="44" rx="4"/>
+          <text id="svg-think-l1" class="node-code" x="34" y="247">think=False (Ô 0–9)</text>
+          <text id="svg-think-l2" class="node-text" x="34" y="264">chèn &lt;think&gt;&lt;/think&gt;</text>
+        </g>
+
+        <g class="node-group" data-step="1" tabindex="0" role="button" aria-label="Bước 2: Tokenizer Qwen3 cắt chuỗi thành ID">
+          <rect class="node-box" x="206" y="108" width="132" height="176" rx="6"/>
+          <text class="node-tag" x="218" y="128">BƯỚC 2 · Ô 2–3</text>
+          <text class="node-title" x="218" y="148">Tokenizer</text>
+          <text class="node-text" x="218" y="166">151.669 token thật</text>
+          <rect class="node-sub" x="216" y="178" width="112" height="58" rx="4"/>
+          <text class="node-code" x="224" y="195">' Xe' ' ô' 'm'</text>
+          <text class="node-code" x="224" y="210">' g' 'ã' 'y'</text>
+          <text class="node-text" x="224" y="227">VN đắt hơn ~35%</text>
+          <text class="node-code" x="218" y="256">ids: [B, S]</text>
+          <text class="node-text" x="218" y="272">eos=151645</text>
+        </g>
+
+        <g class="node-group" data-step="2" tabindex="0" role="button" aria-label="Bước 3: Bảng Embedding giữ nguyên FP16">
+          <rect class="node-box teal" x="366" y="108" width="98" height="176" rx="6"/>
+          <text class="node-tag teal" x="376" y="128">BƯỚC 3 · Ô 4</text>
+          <text class="node-title" x="376" y="148">Embedding</text>
+          <text class="node-code" x="376" y="168">151.936</text>
+          <text class="node-code" x="376" y="182">× 2048</text>
+          <rect class="node-sub" x="374" y="194" width="82" height="44" rx="4"/>
+          <text class="node-code" x="380" y="211">0,311 tỷ</text>
+          <text class="node-code" x="380" y="227">FP16: 0,62G</text>
+          <text class="node-tag teal" x="376" y="256">KHÔNG NÉN</text>
+          <text class="node-text" x="376" y="272">[B, S, 2048]</text>
+        </g>
+
+        <g class="node-group" data-step="3" tabindex="0" role="button" aria-label="Bước 4: 28 lớp Transformer với GQA và MLP">
+          <rect id="svg-blocks-box" class="node-box amber" x="494" y="88" width="268" height="218" rx="6"/>
+          <text id="svg-blocks-tag" class="node-tag amber" x="508" y="108">BƯỚC 4 · ×28 LỚP · NF4 4-BIT</text>
+          <text class="node-title" x="508" y="128">1,409 tỷ tham số non-embedding</text>
+          <text id="svg-blocks-mem" class="node-code" x="508" y="146">0,70 GB NF4 + 0,02 GB double quant</text>
+
+          <rect class="node-sub" x="508" y="158" width="240" height="54" rx="4"/>
+          <text class="node-title" x="518" y="176" style="font-size:12px;">GQA Attention · 12,58M / lớp</text>
+          <text class="node-code" x="518" y="193">16 Q (2048) · 8 KV (1024)</text>
+          <text class="node-text" x="518" y="206">2 Q dùng chung 1 KV → KV-cache ÷ 2</text>
+
+          <rect class="node-sub" x="508" y="220" width="240" height="46" rx="4"/>
+          <text class="node-title" x="518" y="238" style="font-size:12px;">SwiGLU MLP · 37,75M / lớp</text>
+          <text class="node-code" x="518" y="255">2048 → 6144 (gate, up) → 2048</text>
+
+          <text id="svg-compute-note" class="node-text" x="508" y="286">Giải nén FP16 · T4 sm_75 (không BF16)</text>
+        </g>
+
+        <g class="node-group" data-step="4" tabindex="0" role="button" aria-label="Bước 5: Lớp đầu ra lm_head sinh 151.936 logits">
+          <rect class="node-box teal" x="794" y="108" width="108" height="176" rx="6"/>
+          <text class="node-tag teal" x="804" y="128">BƯỚC 5 · Ô 5</text>
+          <text class="node-title" x="804" y="148">lm_head</text>
+          <text class="node-text" x="804" y="166">Dùng chung bảng</text>
+          <text class="node-text" x="804" y="180">Embedding</text>
+          <rect class="node-sub" x="802" y="192" width="92" height="52" rx="4"/>
+          <text class="node-code" x="808" y="210">logits[0,-1]</text>
+          <text class="node-code" x="808" y="226">151.936 điểm</text>
+          <text class="node-text" x="808" y="239">vị trí cuối</text>
+          <text class="node-tag teal" x="804" y="270">+0 GB thêm</text>
+        </g>
+
+        <g class="node-group" data-step="5" tabindex="0" role="button" aria-label="Bước 6: Softmax theo Temperature và chọn 1 token">
+          <rect class="node-box accent-tint" x="934" y="108" width="228" height="176" rx="6"/>
+          <text class="node-tag" x="946" y="128">BƯỚC 6 · Ô 5–6 · SẢN PHẨM 1</text>
+          <text class="node-title" x="946" y="148">Softmax(logits / T)</text>
+          <text class="node-text" x="946" y="166">Chọn 1 token: Greedy hoặc Sampling</text>
+          <rect class="node-sub" x="944" y="176" width="208" height="72" rx="4"/>
+          <text class="node-code" x="952" y="194">' UBND'    38%  ████████</text>
+          <text class="node-code" x="952" y="210">' phường'  15%  ███</text>
+          <text class="node-code" x="952" y="226">' cơ'      10%  ██</text>
+          <text class="node-text" x="952" y="241">T thấp → nhọn · T cao → dàn trải</text>
+          <text class="node-code" x="946" y="270">Đánh giá P01: do_sample=False</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="inspector" aria-live="polite">
+      <div class="insp-main">
+        <div class="insp-head">
+          <span id="insp-badge" class="badge">BƯỚC 1 / 6</span>
+          <strong id="insp-title">Chat Template &amp; Công tắc Thinking</strong>
+        </div>
+        <p id="insp-desc" style="margin:0;font-size:0.88rem;color:var(--muted);"></p>
+      </div>
+      <div class="insp-facts" id="insp-facts"></div>
+    </div>
+
+    <div class="legend-strip">
+      <span class="leg"><span class="leg-dot teal"></span> Giữ nguyên FP16 (Embedding + lm_head dùng chung)</span>
+      <span class="leg"><span class="leg-dot amber"></span> Nén NF4 4-bit (28 lớp Linear, giải nén FP16 khi tính)</span>
+      <span class="leg"><span class="leg-dot accent"></span> Đường điều khiển đầu vào / đầu ra &amp; vòng lặp sinh</span>
+    </div>
+  </section>
+
+  <div class="two-panels">
+    <section class="panel" aria-labelledby="s2-title">
+      <div class="panel-head">
+        <div class="panel-head-title">
+          <h2 id="s2-title">2. Cấu trúc Tham số (1,720B) &amp; VRAM trên T4 (15 GB)</h2>
+          <p>Lý do NF4 chiếm ~1,35 GB thay vì 0,86 GB: khối Embedding 0,62 GB giữ nguyên ở mọi mức nén.</p>
+        </div>
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;font-weight:600;cursor:pointer;">
+          <input id="untie-toggle" type="checkbox" style="accent-color:var(--accent);">
+          <span>Bỏ tie lm_head (+0,62 GB)</span>
+        </label>
+      </div>
+      <div class="panel-body">
+        <div class="bar-group">
+          <div class="bar-meta">
+            <strong>Phân bổ 1,720 tỷ tham số</strong>
+            <span class="num" id="param-total" style="color:var(--muted);">1,720B tổng</span>
+          </div>
+          <div class="bar-track" id="param-bar"></div>
+        </div>
+
+        <div class="bar-group">
+          <div class="bar-meta">
+            <strong>FP16 (2 byte/tham số · quy tắc nhẩm 1,72 × 2)</strong>
+            <strong class="num" id="vram-fp16-txt">3,44 GB / 15 GB</strong>
+          </div>
+          <div class="bar-track" id="vram-fp16-bar"></div>
+        </div>
+
+        <div class="bar-group">
+          <div class="bar-meta">
+            <strong>INT8 (Linear 1 byte · Embedding giữ FP16)</strong>
+            <strong class="num" id="vram-int8-txt">2,03 GB / 15 GB</strong>
+          </div>
+          <div class="bar-track" id="vram-int8-bar"></div>
+        </div>
+
+        <div class="bar-group">
+          <div class="bar-meta">
+            <strong>NF4 4-bit + Double Quant (Ô 4 đo thật ~1,3–1,5 GB)</strong>
+            <strong class="num" id="vram-nf4-txt">1,35 GB / 15 GB</strong>
+          </div>
+          <div class="bar-track" id="vram-nf4-bar"></div>
+        </div>
+
+        <div class="legend-strip" style="padding:8px 0 0;border-top:1px dashed var(--rule);">
+          <span class="leg"><span class="leg-dot" style="background:var(--accent);border-color:var(--accent);"></span> 28 lớp Linear (MLP + GQA)</span>
+          <span class="leg"><span class="leg-dot" style="background:var(--amber);border-color:var(--amber);"></span> Double quant (0,02 GB)</span>
+          <span class="leg"><span class="leg-dot" style="background:var(--teal);border-color:var(--teal);"></span> Embedding FP16 (0,62 GB)</span>
+          <span class="leg"><span class="leg-dot" style="background:var(--red);border-color:var(--red);"></span> lm_head tách (+0,62 GB)</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="s3-title">
+      <div class="panel-head">
+        <div class="panel-head-title">
+          <h2 id="s3-title">3. Máy X-quang Softmax (Ô 5–6) &amp; Đệm Trái Batch (Ô 10)</h2>
+          <p>Hai phép biến đổi quyết định chất lượng và tốc độ khi chạy 100 câu test.</p>
+        </div>
+        <div class="toolbar">
+          <button class="btn t-btn" type="button" data-t="0.3">T=0.3</button>
+          <button class="btn t-btn active" type="button" data-t="1.0" aria-pressed="true">T=1.0</button>
+          <button class="btn t-btn" type="button" data-t="1.5">T=1.5</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="xray-mini" id="xray-mini"></div>
+
+        <div style="border-top:1px solid var(--rule);padding-top:12px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;">
+            <strong style="font-size:0.86rem;">Ma trận Batch Padding (ID thật từ Qwen3)</strong>
+            <div class="toolbar">
+              <button class="btn pad-mode active" type="button" data-side="left" aria-pressed="true">Đệm trái (Đúng)</button>
+              <button class="btn pad-mode" type="button" data-side="right">Đệm phải (Lỗi)</button>
+            </div>
+          </div>
+          <div class="pad-scroll" id="pad-box"></div>
+          <p id="pad-note" style="margin:0;font-size:0.79rem;color:var(--muted);"></p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="s4-title">
+    <div class="panel-head">
+      <div class="panel-head-title">
+        <h2 id="s4-title">4. Đường ống Đo Baseline Trung thực &amp; 5 Nhóm lỗi Đầu tiên (Ô 11 – Ô 14)</h2>
+        <p>Mốc “trước” cố định trên cùng 100 câu test cho mọi phép so sánh từ Buổi 00 đến Buổi 15.</p>
+      </div>
+      <span class="badge">M00 / base-zero-shot</span>
+    </div>
+    <div class="panel-body">
+      <div class="flow-strip">
+        <div class="flow-card">
+          <span class="kicker">Đầu vào · Ô 12</span>
+          <strong>100 câu <code>p01_test.jsonl</code></strong>
+          <p>44% phải từ chối · 10% văn bản hết hạn · 50% giọng đời thường. Lát cắt: 72 unseen, 24 seen, 4 OOD (dữ liệu giả lập).</p>
+        </div>
+        <div class="flow-card">
+          <span class="kicker">Suy luận lô · Ô 11</span>
+          <strong><code>generate_batch(bs=8)</code></strong>
+          <p><code>render_prompt()</code> tắt thinking + đệm trái + greedy (<code>do_sample=False</code>) cho kết quả tất định, nhanh hơn nhiều lần <code>bs=1</code>.</p>
+        </div>
+        <div class="flow-card">
+          <span class="kicker">Chấm điểm · Ô 13</span>
+          <strong><code>evaluate()</code> + 95% CI</strong>
+          <p>Ghi 8 chỉ số vào <code>leaderboard.csv</code> (trọng tâm hôm nay: <code>json_valid</code>, <code>answer_acc</code>) và lưu output từng câu.</p>
+        </div>
+        <div class="flow-card">
+          <span class="kicker">Phân tích lỗi · Ô 14</span>
+          <strong><code>show_errors(k=5)</code></strong>
+          <p>Lưu <code>m00_base_outputs.json</code> lên Drive để Buổi 01 chấm lại miễn phí, phân loại 5 ca sai vào bản đồ lỗi.</p>
+        </div>
+      </div>
+      <div class="err-chips" aria-label="5 nhóm lỗi khi phân tích baseline">
+        <span class="err-chip"><strong>(a)</strong> Sai định dạng JSON</span>
+        <span class="err-chip"><strong>(b)</strong> Không từ chối khi thiếu văn bản</span>
+        <span class="err-chip"><strong>(c)</strong> Chọn nhầm văn bản lệch địa bàn</span>
+        <span class="err-chip"><strong>(d)</strong> Bỏ sót cảnh báo hết hạn</span>
+        <span class="err-chip"><strong>(e)</strong> Bịa giấy tờ ngoài ngữ cảnh</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  const root = document.documentElement;
+  const themeBtn = document.getElementById("theme-btn");
+  const themes = ["auto", "light", "dark"];
+  const themeText = { auto: "Chủ đề: Tự động", light: "Chủ đề: Sáng", dark: "Chủ đề: Tối" };
+  let themeIdx = 0;
+
+  themeBtn.addEventListener("click", () => {
+    themeIdx = (themeIdx + 1) % themes.length;
+    const t = themes[themeIdx];
+    if (t === "auto") root.removeAttribute("data-theme");
+    else root.setAttribute("data-theme", t);
+    themeBtn.textContent = themeText[t];
+  });
+
+  const steps = [
+    {
+      badge: "BƯỚC 1 / 6 · Ô 8–9",
+      title: "Chat Template & Công tắc enable_thinking",
+      desc: "apply_chat_template bọc các lượt system/user bằng <|im_start|> và <|im_end|>. Khi enable_thinking=False, template chèn sẵn khối <think>\\n\\n</think>\\n\\n rỗng để mô hình trả lời ngay thay vì nghĩ nháp dài dòng.",
+      facts: [
+        ["Hàm chuẩn P01", "p01kit.prompts.render_prompt()"],
+        ["Khác biệt token", "think=False chèn <think></think>"],
+        ["Dùng ở Buổi 00–09", "Tắt thinking (JSON ngắn, nhanh)"],
+        ["Bản mô hình", "Qwen3-1.7B (đã post-train)"]
+      ],
+      edges: []
+    },
+    {
+      badge: "BƯỚC 2 / 6 · Ô 2–3",
+      title: "Tokenizer cắt chữ Việt thành mảnh ID",
+      desc: "Từ vựng thật gồm 151.669 token (bảng đệm thành 151.936). Tiếng Việt có dấu hay bị băm nhỏ ('ôm' → ' ô'+'m', 'gãy' → ' g'+'ã'+'y'), làm câu 13 từ tốn 19 token (so với 14 token tiếng Anh).",
+      facts: [
+        ["Câu 13 từ VN / EN", "19 token vs 14 token (+35%)"],
+        ["Prompt RAG P01", "TB 836 token (tối đa 885)"],
+        ["Token dừng (eos)", "<|im_end|> = 151645"],
+        ["Token đệm (pad)", "<|endoftext|> = 151643"]
+      ],
+      edges: ["edge-1-2"]
+    },
+    {
+      badge: "BƯỚC 3 / 6 · Ô 4 & Ô 7",
+      title: "Bảng Embedding (giữ nguyên FP16, không nén NF4)",
+      desc: "Mỗi token ID tra ra một vector 2048 chiều. bitsandbytes chỉ lượng tử hóa các lớp nn.Linear, không nén nn.Embedding — nên bảng 151.936 × 2048 (0,311 tỷ tham số) luôn giữ 2 byte/tham số = 0,62 GB.",
+      facts: [
+        ["Kích thước ma trận", "151.936 × 2048 = 0,311 tỷ"],
+        ["Bộ nhớ (cố định)", "0,62 GB ở FP16"],
+        ["Weight tying", "Dùng chung với lm_head"],
+        ["Đầu ra tensor", "[batch, seq_len, 2048]"]
+      ],
+      edges: ["edge-2-3"]
+    },
+    {
+      badge: "BƯỚC 4 / 6 · Ô 4 & Ô 7",
+      title: "28 lớp Transformer (GQA Attention + SwiGLU MLP)",
+      desc: "Mỗi lớp có 12,58M tham số GQA Attention (16 đầu Q chia sẻ 8 đầu KV, giảm một nửa KV-cache) và 37,75M tham số MLP (gate, up, down). Tổng 28 lớp = 1,409 tỷ tham số non-embedding.",
+      facts: [
+        ["Số tham số 28 lớp", "1,409 tỷ (50,3M / lớp)"],
+        ["NF4 vs FP16", "0,72 GB (gồm DQ) vs 2,82 GB"],
+        ["GQA KV-cache", "16 Q / 8 KV → giảm 2×"],
+        ["GPU T4 (sm_75)", "Tính bằng FP16 (không BF16)"]
+      ],
+      edges: ["edge-3-4"]
+    },
+    {
+      badge: "BƯỚC 5 / 6 · Ô 5",
+      title: "lm_head dùng chung Embedding → 151.936 Logits",
+      desc: "Nhờ tie_word_embeddings=true, lớp đầu ra tái sử dụng chính ma trận Embedding để chiếu vector cuối cùng [0, -1] thành 151.936 điểm số thô (logits) mà không tốn thêm 0,62 GB VRAM.",
+      facts: [
+        ["Chi phí VRAM thêm", "0 GB (tied) · +0,62 GB nếu tách"],
+        ["Chỉ mục lấy điểm", "logits[0, -1] (token kế tiếp)"],
+        ["Số chiều logits", "151.936 điểm số thô"],
+        ["Chế độ chạy", "@torch.inference_mode()"]
+      ],
+      edges: ["edge-4-5"]
+    },
+    {
+      badge: "BƯỚC 6 / 6 · Ô 5–6",
+      title: "Softmax(logits / T) → Chọn 1 token & Lặp lại",
+      desc: "Chia logits cho temperature rồi qua softmax để thành phân phối 100%. Chọn 1 token (greedy khi chấm P01, sampling theo chuẩn Qwen3 khi hội thoại), nối vào cuối chuỗi và lặp tới <|im_end|>.",
+      facts: [
+        ["Số vòng lặp", "200 token trả lời = 200 lượt"],
+        ["Fine-tune làm gì?", "Dịch xác suất về đáp án đúng"],
+        ["Chấm baseline P01", "Greedy (do_sample=False)"],
+        ["Sampling Qwen3", "Think T=0.6 · No-think T=0.7"]
+      ],
+      edges: ["edge-5-6", "edge-loop"]
+    }
+  ];
+
+  const nodes = Array.from(document.querySelectorAll(".node-group"));
+  const allEdges = ["edge-1-2", "edge-2-3", "edge-3-4", "edge-4-5", "edge-5-6", "edge-loop"];
+  let currentStep = 0;
+  let timer = null;
+
+  function renderStep(idx) {
+    currentStep = (idx + steps.length) % steps.length;
+    const s = steps[currentStep];
+    nodes.forEach((g, i) => g.classList.toggle("selected", i === currentStep));
+    allEdges.forEach((id) => {
+      const el = document.getElementById(id);
+      const act = s.edges.includes(id);
+      el.classList.toggle("active", act);
+      if (id !== "edge-loop") {
+        el.setAttribute("marker-end", act ? "url(#arr-active)" : "url(#arr)");
+      }
+    });
+    document.getElementById("insp-badge").textContent = s.badge;
+    document.getElementById("insp-title").textContent = s.title;
+    document.getElementById("insp-desc").textContent = s.desc;
+    document.getElementById("insp-facts").innerHTML = s.facts
+      .map(([k, v]) => `<div class="fact"><span>${k}</span><strong>${v}</strong></div>`)
+      .join("");
+  }
+
+  nodes.forEach((g, i) => {
+    g.addEventListener("click", () => { stopPlay(); renderStep(i); });
+    g.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        stopPlay();
+        renderStep(i);
+      }
+    });
+  });
+
+  const playBtn = document.getElementById("step-play");
+  function stopPlay() {
+    if (timer) { clearInterval(timer); timer = null; }
+    playBtn.setAttribute("aria-pressed", "false");
+    playBtn.classList.remove("active");
+    playBtn.textContent = "Phát vòng lặp";
+  }
+
+  playBtn.addEventListener("click", () => {
+    if (timer) { stopPlay(); return; }
+    playBtn.setAttribute("aria-pressed", "true");
+    playBtn.classList.add("active");
+    playBtn.textContent = "Tạm dừng";
+    timer = setInterval(() => renderStep(currentStep + 1), 1900);
+  });
+
+  document.getElementById("step-prev").addEventListener("click", () => { stopPlay(); renderStep(currentStep - 1); });
+  document.getElementById("step-next").addEventListener("click", () => { stopPlay(); renderStep(currentStep + 1); });
+  renderStep(0);
+
+  let isNf4 = true;
+  const quantBtn = document.getElementById("quant-toggle");
+  quantBtn.addEventListener("click", () => {
+    isNf4 = !isNf4;
+    quantBtn.classList.toggle("active", isNf4);
+    quantBtn.setAttribute("aria-pressed", String(isNf4));
+    quantBtn.textContent = isNf4 ? "Trọng số: NF4 (1,35 GB)" : "Trọng số: FP16 (3,44 GB)";
+    document.getElementById("svg-blocks-tag").textContent = isNf4
+      ? "BƯỚC 4 · ×28 LỚP · NF4 4-BIT"
+      : "BƯỚC 4 · ×28 LỚP · FP16 16-BIT";
+    document.getElementById("svg-blocks-mem").textContent = isNf4
+      ? "0,70 GB NF4 + 0,02 GB double quant"
+      : "2,82 GB FP16 (2 byte / tham số)";
+    document.getElementById("svg-compute-note").textContent = isNf4
+      ? "Giải nén FP16 · T4 sm_75 (không BF16)"
+      : "Tính FP16 trên T4 · tổng ~3,44 GB";
+    const box = document.getElementById("svg-blocks-box");
+    box.classList.toggle("amber", isNf4);
+    box.classList.toggle("accent-tint", !isNf4);
+  });
+
+  let thinkOn = false;
+  const thinkBtn = document.getElementById("think-toggle");
+  thinkBtn.addEventListener("click", () => {
+    thinkOn = !thinkOn;
+    thinkBtn.classList.toggle("active", thinkOn);
+    thinkBtn.setAttribute("aria-pressed", String(thinkOn));
+    thinkBtn.textContent = thinkOn ? "Thinking: Bật" : "Thinking: Tắt";
+    document.getElementById("svg-think-l1").textContent = thinkOn ? "think=True (Ô 9–10)" : "think=False (Ô 0–9)";
+    document.getElementById("svg-think-l2").textContent = thinkOn ? "mô hình tự mở <think>" : "chèn <think></think>";
+  });
+
+  const nonEmb = 1.409286144;
+  const emb = 0.311164928;
+  const mlpB = 1.056964608;
+  const attnB = 0.352321536;
+  const cap = 15.0;
+  const untieToggle = document.getElementById("untie-toggle");
+
+  function segHtml(cls, pct, text) {
+    if (pct <= 0) return "";
+    return `<div class="bar-seg ${cls}" style="width:${pct.toFixed(2)}%">${pct >= 8 ? text : ""}</div>`;
+  }
+
+  function renderVramPanel() {
+    const untied = untieToggle.checked;
+    const totalP = nonEmb + emb + (untied ? emb : 0);
+    document.getElementById("param-total").textContent = `${totalP.toFixed(3).replace(".", ",")}B tổng`;
+    document.getElementById("param-bar").innerHTML =
+      segHtml("seg-accent", (mlpB / totalP) * 100, "MLP 1,06B") +
+      segHtml("seg-amber", (attnB / totalP) * 100, "GQA 0,35B") +
+      segHtml("seg-teal", (emb / totalP) * 100, "Emb 0,31B") +
+      (untied ? segHtml("seg-red", (emb / totalP) * 100, "lm 0,31B") : "");
+
+    const embGB = emb * 2;
+    const lmGB = untied ? emb * 2 : 0;
+    const rows = [
+      ["fp16", nonEmb * 2, 0],
+      ["int8", nonEmb * 1, 0],
+      ["nf4", nonEmb * 0.5, nonEmb * (0.127 / 8)]
+    ];
+    rows.forEach(([key, lin, dq]) => {
+      const tot = lin + dq + embGB + lmGB;
+      document.getElementById(`vram-${key}-txt`).textContent =
+        `${tot.toFixed(2).replace(".", ",")} GB / 15 GB (${((tot / cap) * 100).toFixed(1).replace(".", ",")}%)`;
+      document.getElementById(`vram-${key}-bar`).innerHTML =
+        segHtml("seg-accent", (lin / cap) * 100, lin.toFixed(2)) +
+        segHtml("seg-amber", (dq / cap) * 100, "") +
+        segHtml("seg-teal", (embGB / cap) * 100, "0.62") +
+        segHtml("seg-red", (lmGB / cap) * 100, "0.62");
+    });
+  }
+
+  untieToggle.addEventListener("change", renderVramPanel);
+  renderVramPanel();
+
+  const cands = [
+    { tok: "' UBND'", logit: 8.40 },
+    { tok: "' phường'", logit: 7.45 },
+    { tok: "' cơ'", logit: 7.05 },
+    { tok: "' Ủy'", logit: 6.72 },
+    { tok: "' điểm'", logit: 6.20 },
+    { tok: "khác...", logit: 6.45, tail: true }
+  ];
+  const tBtns = document.querySelectorAll(".t-btn");
+
+  function renderXray(T) {
+    const exps = cands.map((c) => Math.exp((c.tail ? c.logit + (T - 1.0) * 1.9 : c.logit) / T));
+    const sum = exps.reduce((a, b) => a + b, 0);
+    const probs = exps.map((v) => v / sum);
+    document.getElementById("xray-mini").innerHTML = cands.map((c, i) => {
+      const pct = (probs[i] * 100).toFixed(1);
+      const style = c.tail ? "opacity:0.45;" : "";
+      return `<div class="xray-row"><span style="text-align:right;">${c.tok}</span><div class="xray-bar-bg"><div class="xray-bar-fg" style="width:${Math.max(1.5, probs[i] * 100).toFixed(1)}%;${style}"></div></div><span style="text-align:right;font-weight:700;">${pct}%</span></div>`;
+    }).join("");
+  }
+
+  tBtns.forEach((b) => b.addEventListener("click", () => {
+    tBtns.forEach((x) => {
+      const act = x === b;
+      x.classList.toggle("active", act);
+      x.setAttribute("aria-pressed", String(act));
+    });
+    renderXray(parseFloat(b.dataset.t));
+  }));
+  renderXray(1.0);
+
+  const r1Toks = [[55, "X"], [258, "in"], [139548, " chào"]];
+  const r2Toks = [
+    [140000, "Tôi"], [130702, " chạy"], [82790, " xe"], [128435, " ô"],
+    [76, "m"], [128269, " ở"], [133508, " Tân"], [350, " T"],
+    [88316, "ạo"], [128279, " bị"], [46189, " té"], [82790, " xe"]
+  ];
+  const padBtns = document.querySelectorAll(".pad-mode");
+
+  function renderPad(side) {
+    const pads = Array.from({ length: r2Toks.length - r1Toks.length }, () => [151643, "PAD", true]);
+    const r1 = side === "left"
+      ? [...pads, ...r1Toks.map(([id, s]) => [id, s, false])]
+      : [...r1Toks.map(([id, s]) => [id, s, false]), ...pads];
+    const gCls = side === "left" ? "gen-ok" : "gen-bad";
+    const gTxt = side === "left" ? "→ sinh" : "→ sau PAD!";
+    document.getElementById("pad-box").innerHTML = `<table class="pad-matrix"><tbody>
+      <tr><td class="lbl">Câu 1</td>${r1.map(([id, s, p]) => `<td class="${p ? "pad" : ""}">${s}<br>${id}</td>`).join("")}<td class="${gCls}">${gTxt}</td></tr>
+      <tr><td class="lbl">mask</td>${r1.map(([, , p]) => `<td class="${p ? "pad" : ""}">${p ? 0 : 1}</td>`).join("")}<td>1</td></tr>
+      <tr><td class="lbl">Câu 2</td>${r2Toks.map(([id, s]) => `<td>${s}<br>${id}</td>`).join("")}<td class="gen-ok">→ sinh</td></tr>
+    </tbody></table>`;
+    document.getElementById("pad-note").textContent = side === "left"
+      ? "Đệm trái: mép phải thẳng hàng, token mới nối sát ngay sau prompt (khi train thì đảo lại dùng đệm phải)."
+      : "Đệm phải: 9 token 151643 chen giữa câu hỏi và phần sinh mới ở mép phải → đầu ra sai lệch.";
+  }
+
+  padBtns.forEach((b) => b.addEventListener("click", () => {
+    padBtns.forEach((x) => {
+      const act = x === b;
+      x.classList.toggle("active", act);
+      x.setAttribute("aria-pressed", String(act));
+    });
+    renderPad(b.dataset.side);
+  }));
+  renderPad("left");
+})();
+</script>
+</body>
+</html>

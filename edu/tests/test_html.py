@@ -6,6 +6,7 @@ import re
 EDU = Path(__file__).resolve().parent.parent
 MD_M00 = EDU / "module-00-colab-qwen3-anatomy-baseline.md"
 HTML_M00 = EDU / "module-00-colab-qwen3-anatomy-baseline.html"
+DIAGRAM_M00 = EDU / "module-00-diagram.html"
 
 VOID_TAGS = {
     "area", "base", "br", "col", "embed", "hr", "img", "input",
@@ -76,3 +77,28 @@ def test_module00_html_has_theme_and_interactive_widgets():
     for widget_id in ("lab-xray", "lab-tokens", "lab-vram", "lab-think", "pad-grid"):
         assert f'id="{widget_id}"' in text
     assert len(re.findall(r'class="qa-item"', text)) == 7
+
+
+def test_module00_diagram_exists_balanced_and_self_contained():
+    assert DIAGRAM_M00.exists(), f"Missing {DIAGRAM_M00}"
+    text = DIAGRAM_M00.read_text(encoding="utf-8")
+    parser = TagBalanceParser()
+    parser.feed(text)
+    assert not parser.errors, parser.errors
+    assert not parser.stack, f"Unclosed tags: {parser.stack}"
+    assert not re.search(r"<link[^>]+href=[\"']https?://", text, re.I)
+    assert not re.search(r"<script[^>]+src=[\"']https?://", text, re.I)
+    assert "@import" not in text
+    assert "prefers-color-scheme: dark" in text
+    assert "prefers-reduced-motion" in text
+
+
+def test_module00_diagram_has_all_architecture_nodes_and_views():
+    text = DIAGRAM_M00.read_text(encoding="utf-8")
+    assert 'id="arch-svg"' in text
+    for step in range(6):
+        assert f'data-step="{step}"' in text
+    for view_id in ("param-bar", "vram-nf4-bar", "xray-mini", "pad-box"):
+        assert f'id="{view_id}"' in text
+    assert "tie_word_embeddings = true" in text
+    assert "M00 / base-zero-shot" in text
