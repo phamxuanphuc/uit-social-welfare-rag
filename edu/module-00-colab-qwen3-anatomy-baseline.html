@@ -1411,7 +1411,7 @@ details[open] summary::after {
       <p class="rail-title">Bản đồ buổi học</p>
       <ul class="toc" id="toc-list">
         <li><a href="#overview">0. Vì sao bắt đầu bằng Baseline?</a></li>
-        <li><a href="#glossary">Từ điển nhanh (15 thuật ngữ)</a></li>
+        <li><a href="#glossary">Từ điển nhanh (18 thuật ngữ)</a></li>
         <li><a href="#theory">1. Lý thuyết &amp; Mô phỏng</a></li>
         <li><a class="toc-sub" href="#lab-xray">1.1 Máy X-quang Softmax</a></li>
         <li><a class="toc-sub" href="#lab-tokens">1.2 Token Việt vs Anh</a></li>
@@ -1496,7 +1496,7 @@ details[open] summary::after {
         </div>
         <div class="callout callout-ok">
           <span class="callout-title">Tiêu chí hoàn thành trước khi sang Buổi 01</span>
-          <p class="prose"><code>check_env()</code> báo đạt chuẩn; bảng điểm có dòng <code>M00/base-zero-shot</code>; hai file <code>p01_runs/outputs/M00__base-zero-shot.json</code> và <code>p01_runs/m00_base_outputs.json</code> tồn tại trên Drive; bạn giải thích được cho người khác vì sao mô hình 1,7 tỷ tham số chỉ chiếm khoảng 1,4 GB VRAM ở NF4.</p>
+          <p class="prose"><code>check_env()</code> báo khớp bản ghim và nhận GPU Tesla T4; bảng điểm có dòng <code>M00/base-zero-shot</code>; trên Drive có đủ 2 file <code>p01_runs/outputs/M00__base-zero-shot.json</code> (do Ô 13 tự tạo) và <code>p01_runs/m00_base_outputs.json</code> (lưu ở Ô 14); bạn giải thích được vì sao mô hình 1,7 tỷ tham số chỉ tốn khoảng 1,4 GB VRAM khi nén 4-bit.</p>
           <p class="prose"><strong>Lưu ý dữ liệu:</strong> Văn bản chính sách trong tập test P01 là <strong>giả lập</strong> phục vụ học tập, không dùng tra cứu thủ tục thật.</p>
         </div>
       </div>
@@ -1537,36 +1537,39 @@ details[open] summary::after {
     <section id="glossary" class="section">
       <div class="section-head">
         <span class="section-kicker">Tra cứu nhanh</span>
-        <h2>Từ điển 15 thuật ngữ cốt lõi</h2>
+        <h2>Từ điển 18 thuật ngữ cốt lõi</h2>
       </div>
       <div class="glossary-bar">
-        <input id="glossary-filter" class="search-input" type="search" placeholder="Lọc nhanh thuật ngữ (vd: NF4, logits, padding, VRAM, thinking...)" aria-label="Lọc từ điển thuật ngữ">
-        <span class="num" id="glossary-count" style="font-size:0.84rem;color:var(--ink-muted);">15 / 15 mục</span>
+        <input id="glossary-filter" class="search-input" type="search" placeholder="Lọc nhanh thuật ngữ (vd: Embedding, NF4, KV-cache, RAG, padding...)" aria-label="Lọc từ điển thuật ngữ">
+        <span class="num" id="glossary-count" style="font-size:0.84rem;color:var(--ink-muted);">18 / 18 mục</span>
       </div>
       <div class="table-wrap">
         <table id="glossary-table">
           <thead>
             <tr>
               <th style="width:24%;">Thuật ngữ</th>
-              <th>Nghĩa ngắn gọn</th>
+              <th>Giải thích ngắn gọn</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td><strong>Token</strong></td><td>Mảnh chữ nhỏ nhất mô hình đọc được. Một từ có thể là 1 token (<code>' bị'</code>) hoặc nhiều token (<code>' Ph'</code> + <code>'ường'</code>).</td></tr>
-            <tr><td><strong>Tokenizer</strong></td><td>Bộ cắt câu thành token và đổi mỗi token thành một con số (id).</td></tr>
-            <tr><td><strong>Tham số (parameter)</strong></td><td>Một con số bên trong mô hình, đã được “vặn” sẵn khi huấn luyện. Qwen3-1.7B có khoảng 1,72 tỷ con số như vậy.</td></tr>
-            <tr><td><strong>Logits</strong></td><td>Điểm số thô mô hình chấm cho từng token trong từ vựng (151.936 điểm) ở vị trí kế tiếp.</td></tr>
-            <tr><td><strong>Softmax</strong></td><td>Phép đổi điểm số logits thành xác suất (cộng lại = 100%).</td></tr>
-            <tr><td><strong>Temperature</strong></td><td>Núm chỉnh “độ liều”: thấp → chọn token chắc nhất; cao → chọn đa dạng hơn, dễ bịa hơn.</td></tr>
-            <tr><td><strong>Greedy / Sampling</strong></td><td>Greedy = luôn chọn token xác suất cao nhất (tất định). Sampling = bốc thăm theo xác suất (<code>top_k</code>, <code>top_p</code> giới hạn vùng được bốc).</td></tr>
-            <tr><td><strong>FP16 / BF16</strong></td><td>Hai cách lưu số thực bằng 16 bit (2 byte). Card T4 chỉ chạy nhanh được FP16.</td></tr>
-            <tr><td><strong>Lượng tử hóa (quantization), NF4</strong></td><td>Nén mỗi tham số từ 16 bit xuống 4 bit để mô hình nhẹ đi ~4 lần, đổi lại sai số nhỏ.</td></tr>
-            <tr><td><strong>VRAM</strong></td><td>Bộ nhớ của GPU. Tesla T4 có khoảng 15 GB.</td></tr>
-            <tr><td><strong>Chat template</strong></td><td>Khuôn mẫu đặt câu hỏi vào đúng định dạng hội thoại mà mô hình đã được dạy.</td></tr>
-            <tr><td><strong>Thinking mode</strong></td><td>Chế độ Qwen3 “nghĩ nháp” trong <code>&lt;think&gt;...&lt;/think&gt;</code> trước khi trả lời.</td></tr>
-            <tr><td><strong>Batch / sinh theo lô</strong></td><td>Đưa nhiều câu vào GPU cùng lúc thay vì chạy từng câu một.</td></tr>
-            <tr><td><strong>Padding (đệm)</strong></td><td>Thêm token rỗng để các câu trong cùng lô dài bằng nhau.</td></tr>
-            <tr><td><strong>Baseline / zero-shot</strong></td><td>Điểm của mô hình gốc khi chỉ được đưa câu hỏi, không có ví dụ mẫu, chưa fine-tune.</td></tr>
+            <tr><td><strong>Token</strong></td><td>Mảnh chữ nhỏ nhất mô hình đọc được. Có từ là 1 token (<code>' bị'</code>), có từ bị tách thành nhiều mảnh (<code>' Ph'</code> + <code>'ường'</code>).</td></tr>
+            <tr><td><strong>Tokenizer</strong></td><td>Bộ cắt câu thành token rồi đổi từng mảnh thành một con số (id).</td></tr>
+            <tr><td><strong>Tham số (parameter)</strong></td><td>Một con số nằm bên trong mô hình, đã được chỉnh sẵn lúc huấn luyện. Qwen3-1.7B có khoảng 1,72 tỷ con số như vậy.</td></tr>
+            <tr><td><strong>Embedding</strong></td><td>Bảng tra cứu đổi mỗi token id thành một dãy số (vector 2048 số) để mô hình tính toán được.</td></tr>
+            <tr><td><strong>Logits</strong></td><td>Điểm số thô mô hình chấm cho toàn bộ 151.936 token trong từ vựng ở vị trí kế tiếp.</td></tr>
+            <tr><td><strong>Softmax</strong></td><td>Phép biến điểm số thô thành xác suất sao cho tổng tất cả bằng 100%.</td></tr>
+            <tr><td><strong>Temperature</strong></td><td>Núm chỉnh độ "an toàn" hay "liều": số thấp thì bám sát chữ chắc nhất, số cao thì chọn đa dạng hơn nhưng dễ bịa.</td></tr>
+            <tr><td><strong>Greedy / Sampling</strong></td><td>Greedy là luôn lấy chữ có xác suất cao nhất (chạy lại ra y hệt). Sampling là bốc thăm theo xác suất (<code>top_k</code>, <code>top_p</code> khoanh vùng các chữ được phép bốc).</td></tr>
+            <tr><td><strong>FP16 / BF16</strong></td><td>Hai cách lưu số thực bằng 16 bit (2 byte). Card T4 trên Colab miễn phí chỉ chạy nhanh với FP16.</td></tr>
+            <tr><td><strong>Lượng tử hóa, NF4</strong></td><td>Nén mỗi tham số từ 16 bit xuống 4 bit để mô hình nhẹ đi gần 4 lần, chấp nhận sai số nhỏ.</td></tr>
+            <tr><td><strong>VRAM</strong></td><td>Bộ nhớ riêng của GPU. Tesla T4 có khoảng 15 GB.</td></tr>
+            <tr><td><strong>KV-cache</strong></td><td>Bộ nhớ tạm lưu kết quả trung gian của các token đã đọc, giúp mô hình khỏi tính lại từ đầu ở mỗi chữ mới sinh.</td></tr>
+            <tr><td><strong>Chat template</strong></td><td>Khuôn mẫu đóng gói câu hỏi thành đúng định dạng hội thoại mà mô hình từng học.</td></tr>
+            <tr><td><strong>Thinking mode</strong></td><td>Chế độ Qwen3 viết phần nháp trong <code>&lt;think&gt;...&lt;/think&gt;</code> trước khi trả lời chính thức.</td></tr>
+            <tr><td><strong>Batch (sinh theo lô)</strong></td><td>Gom nhiều câu đưa vào GPU xử lý song song thay vì hỏi từng câu một.</td></tr>
+            <tr><td><strong>Padding (đệm)</strong></td><td>Chèn thêm token rỗng để các câu dài ngắn khác nhau trong cùng một lô có độ dài bằng nhau.</td></tr>
+            <tr><td><strong>RAG</strong></td><td>Cách tìm sẵn các đoạn văn bản liên quan rồi dán vào prompt cho mô hình đọc trước khi trả lời.</td></tr>
+            <tr><td><strong>Baseline / zero-shot</strong></td><td>Điểm của mô hình gốc khi chỉ nhận câu hỏi, không đưa ví dụ mẫu và chưa fine-tune.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1788,27 +1791,32 @@ details[open] summary::after {
       </div>
 
       <div id="part-a" class="part-banner" data-session="1">
-        <h3>Phần A — Chuẩn bị môi trường</h3>
+        <h3>Phần A: Chuẩn bị môi trường</h3>
         <span>Ô 0a, 0b, 1 · Lần ngồi 1</span>
+      </div>
+
+      <div class="callout callout-warn" data-session="1">
+        <span class="callout-title">Làm trước khi chạy Ô 0a</span>
+        <p class="prose">Mở Google Colab, vào menu <em>Runtime → Change runtime type → chọn T4 GPU</em> rồi bấm Save trước khi chạy bất kỳ ô nào. Nếu để mặc định CPU rồi lát nữa mới đổi sang T4, Colab sẽ cấp máy mới tinh và xóa sạch toàn bộ thư viện vừa cài ở Ô 0a.</p>
       </div>
 
       <article class="cell-card" data-cell="0a" data-session="1">
         <div class="cell-head">
           <div class="cell-title-group">
             <span class="cell-id">Ô 0a</span>
-            <h4>Lấy code &amp; cài thư viện (chạy 1 lần cho mỗi runtime)</h4>
+            <h4>Tải repo và cài thư viện (chạy 1 lần cho mỗi phiên máy mới)</h4>
           </div>
           <label class="cell-done-label"><input type="checkbox" class="cell-check" data-cell="0a"> Đã chạy xong</label>
         </div>
         <div class="cell-body">
-          <p class="cell-goal"><strong>Mục tiêu:</strong> đưa code + dữ liệu đồ án vào Colab và cài <strong>đúng phiên bản đã ghim</strong>. Nếu repo để <em>private</em>, bấm biểu tượng Chìa khóa (<em>Secrets</em>) bên trái Colab → thêm <code>GITHUB_TOKEN</code> và bật <em>Notebook access</em>.</p>
+          <p class="cell-goal"><strong>Mục tiêu:</strong> Đưa code + dữ liệu đồ án vào Colab và cài đúng phiên bản đã ghim. <strong>Tạo 3 ô Colab riêng biệt</strong> (<code>0a-1</code>, <code>0a-2</code>, <code>0a-3</code>), dán từng khung code rồi chạy lần lượt. Nếu repo để private, mở <em>Secrets</em> (biểu tượng chìa khóa bên trái Colab), thêm <code>GITHUB_TOKEN</code> và bật <em>Notebook access</em>.</p>
           <div class="code-block">
-            <div class="code-bar"><span>Python · 1/3 · Clone repo an toàn qua biến môi trường</span><button class="copy-btn" type="button">Chép code</button></div>
+            <div class="code-bar"><span>Ô 0a-1 · Python · Tải code từ GitHub</span><button class="copy-btn" type="button">Chép code</button></div>
             <pre><code>import os, subprocess, base64
 REPO, URL = "/content/uit-social-welfare-rag", "https://github.com/phamxuanphuc/uit-social-welfare-rag.git"
 if not os.path.exists(REPO):
     env = dict(os.environ)
-    try:  # repo private: đọc GITHUB_TOKEN từ Colab Secrets (🔑); repo public thì bỏ qua
+    try:  # repo private: đọc GITHUB_TOKEN từ Colab Secrets; repo public thì bỏ qua
         from google.colab import userdata
         basic = base64.b64encode(f"x-access-token:{userdata.get('GITHUB_TOKEN')}".encode()).decode()
         env |= {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "http.extraHeader",
@@ -1819,16 +1827,16 @@ if not os.path.exists(REPO):
     assert r.returncode == 0, f"git clone lỗi:\n{r.stderr}"</code></pre>
           </div>
           <div class="code-block">
-            <div class="code-bar"><span>Bash · 2/3 · Cài bộ thư viện đã ghim phiên bản</span><button class="copy-btn" type="button">Chép code</button></div>
+            <div class="code-bar"><span>Ô 0a-2 · Bash · Cài thư viện đã ghim (mất ~2–3 phút)</span><button class="copy-btn" type="button">Chép code</button></div>
             <pre><code>!pip install -q -r /content/uit-social-welfare-rag/edu/requirements-colab.txt</code></pre>
           </div>
           <div class="code-block">
-            <div class="code-bar"><span>Python · 3/3 · Khởi động lại runtime</span><button class="copy-btn" type="button">Chép code</button></div>
+            <div class="code-bar"><span>Ô 0a-3 · Python · Khởi động lại Python</span><button class="copy-btn" type="button">Chép code</button></div>
             <pre><code>import os; os.kill(os.getpid(), 9)  # khởi động lại runtime để nạp thư viện mới (Colab sẽ tự kết nối lại)</code></pre>
           </div>
           <ul class="cell-notes">
-            <li><strong>Giải thích:</strong> Thông báo “session crashed” sau ô 3 là <strong>bình thường</strong>. Token truyền qua biến môi trường <code>GIT_CONFIG_*</code> để không bao giờ lộ ra màn hình lỗi hay lưu vào <code>.git/config</code>. Ghim phiên bản (<code>transformers==5.17.0</code>, <code>trl==1.15.0</code>...) giúp notebook vẫn chạy sau 6 tháng.</li>
-            <li class="note-warn"><strong>Lỗi hay gặp:</strong> Quên chạy ô 3 → Python vẫn dùng bản <code>transformers</code> cũ trên Colab, gây lỗi khó hiểu ở các buổi sau.</li>
+            <li><strong>Giải thích:</strong> Thông báo "Your session crashed" sau Ô 0a-3 là bình thường. Token truyền qua biến môi trường <code>GIT_CONFIG_*</code> để không lộ ra màn hình lỗi hay lưu vào <code>.git/config</code>. Ghim phiên bản (<code>transformers==5.17.0</code>, <code>trl==1.15.0</code>...) giúp code chạy ổn định về sau.</li>
+            <li class="note-warn"><strong>Lỗi hay gặp:</strong> Quên chạy Ô 0a-3 khiến Python dùng bản <code>transformers</code> cũ của Colab, sinh lỗi khó hiểu ở các ô sau.</li>
           </ul>
         </div>
       </article>
@@ -1968,9 +1976,10 @@ model.eval()
 print(f"Footprint: {model.get_memory_footprint()/1e9:.2f} GB | VRAM đang cấp: {torch.cuda.memory_allocated()/1e9:.2f} GB")</code></pre>
           </div>
           <ul class="cell-notes">
-            <li><strong>Giải thích tham số:</strong> <code>nf4</code> nén trọng số theo phân phối hình chuông; <code>double_quant</code> nén thêm hằng số giải nén; <code>compute_dtype=float16</code> giải nén tạm sang FP16 lúc tính; <code>dtype=float16</code> giữ embedding/norm ở FP16; <code>model.eval()</code> tắt chế độ train.</li>
-            <li class="note-expect"><strong>Kết quả nên thấy:</strong> footprint ≈ <strong>1,3–1,5 GB</strong>.</li>
-            <li class="note-warn"><strong>Lỗi hay gặp:</strong> Ra ~3,4 GB nghĩa là <code>quantization_config</code> chưa có hiệu lực. Transformers 5 dùng <code>dtype=</code> (không dùng <code>torch_dtype=</code>).</li>
+            <li class="note-key"><strong>Lưu ý lần chạy đầu:</strong> Bạn sẽ thấy tải ~3,4 GB từ Hugging Face (mất 1–2 phút). Chuyện này bình thường: trên mạng chỉ lưu bản gốc FP16, tải về xong <code>bitsandbytes</code> mới nén sang 4-bit ngay trên máy.</li>
+            <li><strong>Giải thích tham số:</strong> <code>nf4</code> nén trọng số xuống 4-bit; <code>double_quant</code> nén thêm hằng số giải nén; <code>compute_dtype=float16</code> giải nén tạm sang FP16 lúc tính; <code>dtype=float16</code> giữ embedding/norm ở FP16; <code>model.eval()</code> chuyển sang chế độ chỉ dùng, không học.</li>
+            <li class="note-expect"><strong>Kết quả nên thấy:</strong> Footprint khoảng <strong>1,3–1,5 GB</strong>.</li>
+            <li class="note-warn"><strong>Lỗi hay gặp:</strong> Ra ~3,4 GB nghĩa là <code>quantization_config</code> chưa có tác dụng. Bản <code>transformers</code> 5 dùng <code>dtype=</code>, không dùng tên cũ <code>torch_dtype=</code>.</li>
           </ul>
         </div>
       </article>
@@ -1980,28 +1989,29 @@ print(f"Footprint: {model.get_memory_footprint()/1e9:.2f} GB | VRAM đang cấp:
           <div class="cell-title-group">
             <span class="cell-id">Ô 5</span>
             <span class="cell-pill">SẢN PHẨM 1</span>
-            <h4>Máy X-quang token kế tiếp (9 dòng)</h4>
+            <h4>Máy X-quang token kế tiếp (10 dòng)</h4>
           </div>
           <label class="cell-done-label"><input type="checkbox" class="cell-check" data-cell="5"> Đã chạy xong</label>
         </div>
         <div class="cell-body">
-          <p class="cell-goal"><strong>Mục tiêu:</strong> nhìn tận mắt Bước 3 của vòng lặp sinh chữ — mô hình đang phân vân giữa những token nào.</p>
+          <p class="cell-goal"><strong>Mục tiêu:</strong> Nhìn thẳng vào bước 3 của vòng lặp sinh chữ để xem mô hình đang phân vân giữa những token nào.</p>
           <div class="code-block">
-            <div class="code-bar"><span>Python · 9 dòng</span><button class="copy-btn" type="button">Chép code</button></div>
+            <div class="code-bar"><span>Python · 10 dòng</span><button class="copy-btn" type="button">Chép code</button></div>
             <pre><code>@torch.inference_mode()
 def xray(text: str, k: int = 5, temperature: float = 1.0):
     enc = tok(text, return_tensors="pt", add_special_tokens=False).to(model.device)
     logits = model(**enc).logits[0, -1].float()          # điểm số tại vị trí CUỐI = dự đoán token kế tiếp
     probs = torch.softmax(logits / temperature, dim=-1)  # đổi điểm số thành xác suất
-    for p, i in zip(*probs.topk(k)):                     # lấy k token xác suất cao nhất
+    vals, idxs = probs.topk(k)                           # lấy k token có xác suất cao nhất
+    for p, i in zip(vals, idxs):
         print(f"{tok.decode([i.item()])!r:&gt;16}  {p.item():6.1%}")
 
 xray("Người lao động chạy xe ôm bị tai nạn cần nộp hồ sơ tại")</code></pre>
           </div>
           <ul class="cell-notes">
-            <li><strong>Giải thích:</strong> <code>@torch.inference_mode()</code> tiết kiệm VRAM và chạy nhanh hơn. <code>logits</code> có kích thước <code>[số câu, số token, 151.936]</code>; chỉ mục <code>[0, -1]</code> lấy vị trí cuối của câu đầu tiên.</li>
-            <li class="note-expect"><strong>Kết quả nên thấy:</strong> top-5 gồm các mảnh như <code>' UBND'</code>, <code>' Ủy'</code>, <code>' cơ'</code>, <code>' phường'</code>... với xác suất giảm dần.</li>
-            <li class="note-key"><strong>Ghi nhớ:</strong> Fine-tune là quá trình dịch chuyển phân phối xác suất này về phía câu trả lời chuẩn.</li>
+            <li><strong>Giải thích cú pháp mới:</strong> <code>@torch.inference_mode()</code> gắn nhãn báo PyTorch chỉ tính xuôi (nhanh, nhẹ bộ nhớ); <code>return_tensors="pt"</code> đổi sang bảng số PyTorch rồi <code>.to(model.device)</code> đẩy lên GPU; dấu <code>**enc</code> trải các khóa trong dict thành tham số hàm; <code>logits[0, -1]</code> lấy câu đầu tiên (<code>0</code>) ở vị trí token cuối cùng (<code>-1</code>).</li>
+            <li class="note-expect"><strong>Kết quả nên thấy:</strong> 5 dòng gồm các mảnh như <code>' UBND'</code>, <code>' Ủy'</code>, <code>' cơ'</code>, <code>' phường'</code>... kèm phần trăm giảm dần.</li>
+            <li class="note-key"><strong>Điểm cần nhớ:</strong> Fine-tune chỉ nhằm kéo phân phối xác suất này nghiêng về phía đáp án đúng.</li>
           </ul>
         </div>
       </article>
@@ -2239,8 +2249,8 @@ print("Đáp án vàng:", r["gold"])</code></pre>
             <div class="stat-box"><span class="metric-val">50%</span><span>Giọng đời thường (colloquial)</span></div>
           </div>
           <ul class="cell-notes">
-            <li><strong>Giải thích:</strong> Mỗi câu có câu hỏi người dân, 3 đoạn ngữ cảnh chính sách (có thể chứa nhiễu) và đáp án vàng JSON. Lát cắt: <code>seen_doc: 24</code>, <code>unseen_doc: 72</code>, <code>ood: 4</code>.</li>
-            <li class="note-warn"><strong>Nhắc lại:</strong> Toàn bộ văn bản chính sách trong bộ dữ liệu là <strong>giả lập</strong> — không dùng để tra cứu thủ tục thật.</li>
+            <li><strong>Giải thích:</strong> Mỗi câu có câu hỏi người dân, 3 đoạn ngữ cảnh chính sách (có thể chứa nhiễu) và đáp án vàng JSON. Lát cắt: <code>seen_doc: 24</code> (văn bản có trong tập train), <code>unseen_doc: 72</code> (văn bản mới hoàn toàn), <code>ood: 4</code> (ngoài phạm vi).</li>
+            <li class="note-warn"><strong>Lưu ý dữ liệu:</strong> Toàn bộ văn bản chính sách trong bộ dữ liệu là giả lập để học tập, không dùng tra cứu thủ tục thật.</li>
           </ul>
         </div>
       </article>
@@ -2250,12 +2260,12 @@ print("Đáp án vàng:", r["gold"])</code></pre>
           <div class="cell-title-group">
             <span class="cell-id">Ô 13</span>
             <span class="cell-pill">SẢN PHẨM 3</span>
-            <h4>Đo Baseline zero-shot &amp; ghi bảng điểm (7 dòng)</h4>
+            <h4>Đo baseline zero-shot và ghi bảng điểm (7 dòng)</h4>
           </div>
           <label class="cell-done-label"><input type="checkbox" class="cell-check" data-cell="13"> Đã chạy xong</label>
         </div>
         <div class="cell-body">
-          <p class="cell-goal"><strong>Mục tiêu:</strong> chấm mô hình gốc trên 100 câu test và ghi dòng mốc đầu tiên vào <code>leaderboard.csv</code>.</p>
+          <p class="cell-goal"><strong>Mục tiêu:</strong> Chấm mô hình gốc trên đủ 100 câu test và lưu dòng mốc đầu tiên vào <code>leaderboard.csv</code> trên Drive.</p>
           <div class="code-block">
             <div class="code-bar"><span>Python · 7 dòng</span><button class="copy-btn" type="button">Chép code</button></div>
             <pre><code>from p01kit.infer import evaluate
@@ -2268,17 +2278,18 @@ scoreboard.record("M00", "base-zero-shot", res0["summary"], latency_s=res0["summ
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Chỉ số cần đọc hôm nay</th><th>Nghĩa</th><th>Cách đọc nhanh</th></tr></thead>
+              <thead><tr><th>Chỉ số cần nhìn hôm nay</th><th>Nghĩa</th><th>Cách đọc nhanh</th></tr></thead>
               <tbody>
-                <tr><td><code>json_valid</code></td><td>Tỉ lệ câu trả lời đúng định dạng JSON</td><td>Thấp → mô hình chưa quen định dạng P01</td></tr>
-                <tr><td><code>answer_acc</code></td><td>Tỉ lệ quyết định đúng: từ chối đúng lúc hoặc trích đúng văn bản</td><td>“Điểm tổng” dễ hiểu nhất để theo dõi</td></tr>
+                <tr><td><code>json_valid</code></td><td>Tỉ lệ câu trả lời đúng định dạng JSON</td><td>Thấp nghĩa là mô hình chưa quen khuôn JSON của P01</td></tr>
+                <tr><td><code>answer_acc</code></td><td>Tỉ lệ quyết định đúng: từ chối đúng lúc hoặc trích đúng mã văn bản</td><td>Con số dễ hình dung nhất cho chất lượng tổng thể</td></tr>
               </tbody>
             </table>
           </div>
           <ul class="cell-notes">
-            <li><strong>Khoảng tin cậy <code>95%CI</code>:</strong> Ví dụ <code>answer_acc 0.60 [0.50, 0.70]</code> nghĩa là với chỉ 100 câu, điểm thật có thể nằm trong đoạn 0,50–0,70. Chênh lệch 3 điểm thường chưa đủ khẳng định khác biệt thật (Buổi 01 học kiểm định McNemar).</li>
-            <li class="note-expect"><strong>Kết quả nên thấy:</strong> Bảng 8 chỉ số kèm <code>95%CI</code> và <code>n</code>, trong đó <code>json_valid &gt; 0</code>. Điểm từ chối và cảnh báo hết hạn thấp ở baseline là hoàn toàn bình thường.</li>
-            <li class="note-warn"><strong>Lỗi hay gặp:</strong> Nếu <code>json_valid = 0</code> → kiểm tra xem có vô tình bật thinking hay để <code>max_new_tokens</code> quá nhỏ không.</li>
+            <li class="note-key"><strong>Thời gian chờ:</strong> Chạy 100 câu trên T4 mất khoảng <strong>2 đến 5 phút</strong> và không in tiến trình giữa chừng. Thấy Colab im lặng là bình thường, đừng bấm dừng. File <code>p01_runs/outputs/M00__base-zero-shot.json</code> do <code>scoreboard.record</code> tự tạo.</li>
+            <li><strong>Khoảng tin cậy <code>95%CI</code>:</strong> Ví dụ <code>answer_acc 0.410 95%CI [0.310, 0.510] (n=100)</code> nghĩa là vì chỉ đo trên 100 câu, điểm thật nằm trong khoảng 31% đến 51%. Hơn kém 2 đến 3 điểm phần trăm chưa chắc đã khác nhau thật (Buổi 01 học kiểm định).</li>
+            <li class="note-expect"><strong>Kết quả nên thấy:</strong> Bảng 8 chỉ số kèm <code>95%CI</code> và <code>n</code>, với <code>json_valid &gt; 0</code>. Điểm từ chối và cảnh báo hết hạn ở mô hình gốc thường thấp, đó là lý do ta fine-tune ở các buổi sau.</li>
+            <li class="note-warn"><strong>Lỗi hay gặp:</strong> Nếu <code>json_valid = 0</code>, kiểm tra xem bạn có vô tình bật thinking hay để <code>max_new_tokens</code> quá nhỏ không.</li>
           </ul>
         </div>
       </article>
@@ -2287,12 +2298,12 @@ scoreboard.record("M00", "base-zero-shot", res0["summary"], latency_s=res0["summ
         <div class="cell-head">
           <div class="cell-title-group">
             <span class="cell-id">Ô 14</span>
-            <h4>Phân tích lỗi (error analysis) &amp; lưu output (5 dòng)</h4>
+            <h4>Đọc lỗi thực tế (error analysis) và lưu output (5 dòng)</h4>
           </div>
           <label class="cell-done-label"><input type="checkbox" class="cell-check" data-cell="14"> Đã chạy xong</label>
         </div>
         <div class="cell-body">
-          <p class="cell-goal"><strong>Mục tiêu:</strong> đọc trực tiếp 5 ca mô hình làm sai và lưu output thô lên Drive để Buổi 01 chấm lại miễn phí.</p>
+          <p class="cell-goal"><strong>Mục tiêu:</strong> Đọc trực tiếp 5 câu mô hình làm sai (kèm địa bàn, trạng thái từ chối và trạng thái hết hạn) và lưu output thô lên Drive cho Buổi 01 chấm lại miễn phí.</p>
           <div class="code-block">
             <div class="code-bar"><span>Python · 5 dòng</span><button class="copy-btn" type="button">Chép code</button></div>
             <pre><code>import json
@@ -2305,11 +2316,11 @@ with open(f"{os.environ['P01_RUNS']}/m00_base_outputs.json", "w") as f:
             <table>
               <thead><tr><th>Nhóm lỗi</th><th>Dấu hiệu nhận biết khi đọc 5 ca sai</th></tr></thead>
               <tbody>
-                <tr><td><strong>(a) Sai định dạng JSON</strong></td><td>Output không phải JSON, thiếu khóa, thêm chữ ngoài JSON</td></tr>
-                <tr><td><strong>(b) Không từ chối khi phải từ chối</strong></td><td>Ngữ cảnh không có văn bản phù hợp nhưng mô hình vẫn trả lời</td></tr>
-                <tr><td><strong>(c) Chọn nhầm văn bản lệch địa bàn</strong></td><td>Người hỏi ở Đà Nẵng, mô hình trích văn bản TP.HCM</td></tr>
-                <tr><td><strong>(d) Bỏ sót cảnh báo hết hạn</strong></td><td>Văn bản đã hết hiệu lực nhưng <code>expired_warning</code> là <code>false</code></td></tr>
-                <tr><td><strong>(e) Bịa giấy tờ</strong></td><td>Liệt kê giấy tờ không có trong ngữ cảnh</td></tr>
+                <tr><td><strong>(a) Sai định dạng JSON</strong></td><td>Không phải JSON hợp lệ, thiếu khóa hoặc thêm chữ ngoài JSON</td></tr>
+                <tr><td><strong>(b) Không chịu từ chối</strong></td><td><code>gold_refusal=True</code> nhưng mô hình vẫn trả lời và trích đại văn bản</td></tr>
+                <tr><td><strong>(c) Trích nhầm văn bản lệch địa bàn</strong></td><td>Người hỏi ở Cần Thơ/Đà Nẵng nhưng mô hình trích văn bản TP.HCM</td></tr>
+                <tr><td><strong>(d) Bỏ sót cảnh báo hết hạn</strong></td><td><code>gold_expired=True</code> nhưng <code>expired_warning</code> trong output là <code>false</code></td></tr>
+                <tr><td><strong>(e) Bịa giấy tờ</strong></td><td>Liệt kê giấy tờ không hề có trong ngữ cảnh (xem thêm <code>test[i]["context"]</code> nếu cần)</td></tr>
               </tbody>
             </table>
           </div>
@@ -2320,13 +2331,13 @@ with open(f"{os.environ['P01_RUNS']}/m00_base_outputs.json", "w") as f:
     <section id="scoreboard" class="section">
       <div class="section-head">
         <span class="section-kicker">Phần 3 · So sánh hiệu quả</span>
-        <h2>Bảng điểm sau Buổi 00 &amp; Kiểm tra ngưỡng cổng</h2>
+        <h2>Bảng điểm sau Buổi 00 và kiểm tra ngưỡng cổng</h2>
       </div>
       <div class="code-block">
         <div class="code-bar"><span>Python · Mở bảng điểm bất cứ lúc nào trên Colab</span><button class="copy-btn" type="button">Chép code</button></div>
         <pre><code>scoreboard.show()</code></pre>
       </div>
-      <p class="prose">Nhập số đo thật từ lượt chạy Ô 13 của bạn vào dòng dưới (tự lưu trên trình duyệt) để đối chiếu với các ngưỡng chốt trước trong <code>PROJECT-REQUIREMENTS.md</code> (tương đương <code>p01kit.metrics.gate(summary)</code>). Sau Buổi 00 phần lớn ngưỡng chưa đạt là bình thường.</p>
+      <p class="prose">Nhập số đo thật từ lượt chạy Ô 13 vào dòng dưới (tự lưu trên trình duyệt) để đối chiếu với 4 ngưỡng chốt trong <code>PROJECT-REQUIREMENTS.md</code> (tương đương <code>p01kit.metrics.gate(res0["summary"])</code>). Sau Buổi 00 hầu hết ngưỡng chưa đạt là bình thường.</p>
       <div class="table-wrap">
         <table>
           <thead>
@@ -2334,6 +2345,7 @@ with open(f"{os.environ['P01_RUNS']}/m00_base_outputs.json", "w") as f:
               <th>Module</th>
               <th>Variant</th>
               <th><code>json_valid</code></th>
+              <th><code>answer_acc</code></th>
               <th><code>refusal_acc</code> (≥ 0.90)</th>
               <th><code>citation_precision</code> (≥ 0.90)</th>
               <th><code>expired_recall</code> (= 1.00)</th>
@@ -2346,6 +2358,7 @@ with open(f"{os.environ['P01_RUNS']}/m00_base_outputs.json", "w") as f:
               <td><strong>M00</strong></td>
               <td><code>base-zero-shot</code></td>
               <td><input class="score-input" type="number" step="0.01" min="0" max="1" data-metric="json_valid" placeholder="0.00" aria-label="json_valid"></td>
+              <td><input class="score-input" type="number" step="0.01" min="0" max="1" data-metric="answer_acc" placeholder="0.00" aria-label="answer_acc"></td>
               <td><input class="score-input" type="number" step="0.01" min="0" max="1" data-metric="refusal_acc" placeholder="0.00" aria-label="refusal_acc"><br><span class="gate-badge gate-idle" data-gate="refusal_acc">Chưa nhập</span></td>
               <td><input class="score-input" type="number" step="0.01" min="0" max="1" data-metric="citation_precision" placeholder="0.00" aria-label="citation_precision"><br><span class="gate-badge gate-idle" data-gate="citation_precision">Chưa nhập</span></td>
               <td><input class="score-input" type="number" step="0.01" min="0" max="1" data-metric="expired_recall" placeholder="0.00" aria-label="expired_recall"><br><span class="gate-badge gate-idle" data-gate="expired_recall">Chưa nhập</span></td>
@@ -2393,9 +2406,9 @@ with open(f"{os.environ['P01_RUNS']}/m00_base_outputs.json", "w") as f:
             <tr><th>Triệu chứng</th><th>Nguyên nhân thường gặp</th><th>Cách sửa</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>no CUDA GPUs are available</code></td><td>Runtime đang ở chế độ CPU</td><td><em>Runtime → Change runtime type → T4 GPU</em>, chạy lại Ô 0b</td></tr>
+            <tr><td><code>no CUDA GPUs are available</code></td><td>Runtime đang chạy CPU</td><td><em>Runtime → Change runtime type → T4 GPU</em>, chạy lại từ Ô 0a</td></tr>
             <tr><td><code>ModuleNotFoundError: p01kit</code></td><td>Chưa chạy Ô 0b sau khi khởi động lại</td><td>Chạy lại Ô 0b</td></tr>
-            <tr><td><code>check_env()</code> cảnh báo sai phiên bản</td><td>Quên khởi động lại sau khi cài</td><td>Chạy ô <code>os.kill(...)</code> của Ô 0a, rồi Ô 0b</td></tr>
+            <tr><td><code>check_env()</code> báo sai phiên bản</td><td>Quên chạy Ô 0a-3 sau khi cài thư viện</td><td>Chạy Ô 0a-3 (<code>os.kill(...)</code>), chờ nối lại rồi chạy Ô 0b</td></tr>
             <tr><td><code>CUDA out of memory</code></td><td>Còn mô hình cũ trong VRAM hoặc <code>batch_size</code> quá lớn</td><td><em>Runtime → Restart session</em>, chạy lại từ Ô 0b; giảm <code>batch_size</code></td></tr>
             <tr><td>Footprint ~3,4 GB ở Ô 4</td><td>Chưa kích hoạt nén 4-bit</td><td>Kiểm tra đã truyền <code>quantization_config=bnb</code></td></tr>
             <tr><td><code>json_valid = 0</code> ở Ô 13</td><td>Thinking đang bật hoặc <code>max_new_tokens</code> quá nhỏ</td><td>Giữ mặc định của <code>evaluate</code>, dùng <code>p01kit.MAX_NEW_TOKENS</code></td></tr>

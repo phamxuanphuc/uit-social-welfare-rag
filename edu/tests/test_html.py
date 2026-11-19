@@ -77,6 +77,9 @@ def test_module00_html_has_theme_and_interactive_widgets():
     for widget_id in ("lab-xray", "lab-tokens", "lab-vram", "lab-think", "pad-grid"):
         assert f'id="{widget_id}"' in text
     assert len(re.findall(r'class="qa-item"', text)) == 7
+    for term in ("<strong>Embedding</strong>", "<strong>KV-cache</strong>", "<strong>RAG</strong>"):
+        assert term in text
+    assert 'data-metric="answer_acc"' in text
 
 
 def test_module00_diagram_exists_balanced_and_self_contained():
