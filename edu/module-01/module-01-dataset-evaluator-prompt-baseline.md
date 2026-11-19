@@ -3,7 +3,7 @@
 | Mục | Nội dung |
 |---|---|
 | **Thời lượng** | 3 giờ (1h lý thuyết · 2h lab) |
-| **Đầu vào** | Ô 0a/0b của [Buổi 00](module-00-colab-qwen3-anatomy-baseline.md); dòng `M00/base-zero-shot` trong bảng điểm |
+| **Đầu vào** | Ô 0a/0b của [Buổi 00](../module-00/module-00-colab-qwen3-anatomy-baseline.md); dòng `M00/base-zero-shot` trong bảng điểm |
 | **🎯 Sản phẩm** | (1) **Báo cáo kiểm toán dữ liệu** (rò rỉ, phân bố, holdout); (2) **Bộ chấm P01** hiểu tường tận từng chỉ số; (3) 2 dòng bảng điểm **few-shot** + kết luận McNemar "prompt có đủ không?" |
 | **Chỉ số đo** | Số câu trùng giữa train/test ở 2 cấp độ · 8 chỉ số P01 · p-value McNemar · chi phí token của few-shot |
 | **Chế độ code** | 🔬 Ô siêu nhỏ, giải thích từng dòng |
@@ -33,8 +33,8 @@ Buổi này trả lời cả 3 câu, rồi thử giải bài toán **chỉ bằn
 
 > 🧒 **Giải thích kiểu Feynman (đọc trước, 1 phút):** Chia tập theo nhóm giống **ra đề thi không được có câu chỉ đổi vài chữ so với bài tập về nhà** — nếu không, điểm cao chỉ chứng tỏ học thuộc. Khoảng tin cậy là câu "điểm 70 ± 9": thi có 100 câu thì chênh 3 điểm chưa nói lên gì. McNemar chỉ đếm **những câu hai thí sinh làm khác nhau** — câu cả hai cùng đúng hay cùng sai không cho thông tin.
 
-### 1.1. Bộ dữ liệu P01 được thiết kế thế nào (đọc [`p01kit/data.py`](p01kit/data.py))
-- **Kho văn bản giả lập:** 23 văn bản ([`data/policies.json`](data/policies.json)) thuộc 11 chủ đề an sinh, 3 địa bàn + cấp Toàn quốc; 5 văn bản **đã hết hiệu lực**, trong đó 2 văn bản đã có bản mới thay thế.
+### 1.1. Bộ dữ liệu P01 được thiết kế thế nào (đọc [`p01kit/data.py`](../p01kit/data.py))
+- **Kho văn bản giả lập:** 23 văn bản ([`data/policies.json`](../data/policies.json)) thuộc 11 chủ đề an sinh, 3 địa bàn + cấp Toàn quốc; 5 văn bản **đã hết hiệu lực**, trong đó 2 văn bản đã có bản mới thay thế.
   - ⚠️ Mã văn bản, điều khoản, mức tiền và giấy tờ đều **hư cấu** (xem khóa `_disclaimer` trong file), chỉ tên địa bàn là có thật. Khi chia sẻ output của mô hình (ảnh chụp, demo), luôn ghi kèm *"dữ liệu giả lập"* để không ai nhầm với quy định thật.
 - **Kịch bản (scenario)** = (văn bản, ý định hỏi) với 3 ý định: *hồ sơ gồm gì*, *nộp ở đâu*, *mức hỗ trợ*. Mỗi kịch bản sinh **6 biến thể câu hỏi**: 3 giọng chuẩn (formal) + 3 giọng đời thường (colloquial) — ghép cặp theo `pair_id` để đo **Fairness Gap**.
 - **RAFT (Retrieval-Augmented Fine-Tuning):** mỗi câu hỏi kèm **3 đoạn ngữ cảnh**. ~70% câu có 1 văn bản đúng + 2 văn bản nhiễu *khó* (cùng chủ đề khác địa bàn, bản cũ hết hạn, cùng địa bàn khác chủ đề). ~30% câu **bị rút văn bản đúng** → chỉ còn nhiễu → mô hình phải **từ chối**.

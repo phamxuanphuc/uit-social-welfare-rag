@@ -5,7 +5,7 @@ Repo này dùng **hai giấy phép**:
 | Phần | Giấy phép |
 |---|---|
 | **Code**: `edu/p01kit/`, `edu/tests/`, `.github/` | MIT — xem [LICENSE](LICENSE) |
-| **Nội dung**: bài học `edu/module-*.md`, `edu/README.md`, `CONTEXT.md`, `PROJECT-REQUIREMENTS.md`, `docs/adr/`, `document/qwen3-finetune-master-curriculum.md`, dữ liệu giả lập `edu/data/` | Creative Commons Attribution 4.0 International (**CC BY 4.0**) |
+| **Nội dung**: bài học `edu/module-*/`, `edu/README.md`, `CONTEXT.md`, `PROJECT-REQUIREMENTS.md`, `docs/adr/`, `document/qwen3-finetune-master-curriculum.md`, dữ liệu giả lập `edu/data/` | Creative Commons Attribution 4.0 International (**CC BY 4.0**) |
 
 Copyright (c) 2026 P01 project contributors.
 

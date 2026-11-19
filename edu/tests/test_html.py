@@ -4,9 +4,10 @@ from pathlib import Path
 import re
 
 EDU = Path(__file__).resolve().parent.parent
-MD_M00 = EDU / "module-00-colab-qwen3-anatomy-baseline.md"
-HTML_M00 = EDU / "module-00-colab-qwen3-anatomy-baseline.html"
-DIAGRAM_M00 = EDU / "module-00-diagram.html"
+M00 = EDU / "module-00"
+MD_M00 = M00 / "module-00-colab-qwen3-anatomy-baseline.md"
+HTML_M00 = M00 / "module-00-colab-qwen3-anatomy-baseline.html"
+DIAGRAM_M00 = M00 / "module-00-diagram.html"
 
 VOID_TAGS = {
     "area", "base", "br", "col", "embed", "hr", "img", "input",

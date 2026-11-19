@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 EDU = Path(__file__).resolve().parent.parent
-MODULES = sorted(EDU.glob("module-*.md"))
+MODULES = sorted(EDU.glob("module-*/module-*.md"))
 BLOCK_RE = re.compile(r"```(\w+)\n(.*?)```", re.S)
 import textwrap  # noqa: E402  (khối code nằm trong danh sách Markdown bị thụt lề)
 
@@ -24,7 +24,23 @@ def blocks(path: Path, lang: str):
 
 
 def test_has_16_modules():
-    assert [p.name[:9] for p in MODULES] == [f"module-{i:02d}" for i in range(16)]
+    expected = [f"module-{i:02d}" for i in range(16)]
+    assert [p.parent.name for p in MODULES] == expected
+    assert [p.name[:9] for p in MODULES] == expected
+
+
+@pytest.mark.parametrize(
+    "path",
+    MODULES + [EDU / "README.md", EDU.parent / "document" / "qwen3-finetune-master-curriculum.md"],
+    ids=lambda p: p.name,
+)
+def test_relative_markdown_links_resolve(path):
+    text = path.read_text(encoding="utf-8")
+    for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
+        if target.startswith(("http://", "https://", "#")):
+            continue
+        clean = target.split("#", 1)[0]
+        assert (path.parent / clean).exists(), f"{path.name}: broken relative link '{target}'"
 
 
 @pytest.mark.parametrize("path", MODULES, ids=lambda p: p.name)

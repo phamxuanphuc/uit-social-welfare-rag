@@ -18,22 +18,22 @@
 ## Bản đồ 16 buổi
 | Buổi | File | Kỹ thuật trọng tâm | 🎯 Sản phẩm | Phép so sánh chính |
 |---|---|---|---|---|
-| 00 | [module-00](module-00-colab-qwen3-anatomy-baseline.md) | Giải phẫu Qwen3, token tiếng Việt, NF4, thinking on/off, sinh theo lô | Máy X-quang token, bộ sinh theo lô, **baseline** | VRAM ước tính vs thực đo; batch 1 vs 8 |
-| 01 | [module-01](module-01-dataset-evaluator-prompt-baseline.md) | Dữ liệu RAFT sinh bằng luật, chia nhóm, kiểm toán rò rỉ, bộ chấm 8 chỉ số, bootstrap, McNemar | Báo cáo kiểm toán dữ liệu, baseline few-shot | Zero-shot vs 2-shot vs 3-shot |
-| 02 | [module-02](module-02-first-lora-sft-manual-masking.md) | **Loss masking tự viết**, LoRA tính tay 17.432.576 tham số, QLoRA, HF `Trainer` | Adapter `m02/lora_r16` | Base vs SFT (McNemar) |
-| 03 | [module-03](module-03-dora-rslora-controlled-ablation.md) | DoRA, rsLoRA, **ablation có kiểm soát** | Báo cáo ablation 4 biến thể | LoRA vs DoRA vs LoRA-r64 vs rsLoRA-r64 |
-| 04 | [module-04](module-04-unsloth-trl-neftune-fairness.md) | Unsloth, TRL `SFTTrainer`, bẫy `max_length=1024`, NEFTune, W&B | Adapter Unsloth, bảng tốc độ | HF vs Unsloth; **Fairness 2×2** |
-| 05 | [module-05](module-05-raft-distractors-refusal-ablation.md) | RAFT: văn bản nhiễu khó, học từ chối, ngân sách bước cố định | Ma trận 6 loại lỗi | Oracle-only vs RAFT-0% vs RAFT-30% |
-| 06 | [module-06](module-06-hyperparams-debugging-tracking.md) | Quét LR trên **val**, early stopping đúng, lab OOM/NaN/phân kỳ/overfit | **`m06/sft_best`** + sổ tay debug | 3 LR; test đo đúng 1 lần |
-| 07 | [module-07](module-07-synthetic-data-factory.md) | Dữ liệu tổng hợp bằng chính Qwen3, phễu lọc, dedup, data card | `m07/sft_aug` + data card | sft_best vs sft_aug theo lát cắt |
-| 08 | [module-08](module-08-preference-dpo-vs-orpo.md) | Khai thác lỗi **on-policy**, DPO (adapter `ref`), ORPO | `m08/sft_dpo`, `m08/orpo_from_base` | SFT vs SFT→DPO vs ORPO |
-| 09 | [module-09](module-09-grpo-verifiable-rewards.md) | GRPO, 3 phần thưởng kiểm chứng, ràng buộc batch, reward hacking | `m09/grpo` | expired_recall / false_expired trước–sau |
-| 10 | [module-10](module-10-qwen3-thinking-mode.md) | Hybrid thinking, sụp đổ suy luận, SFT trộn 2 chế độ, định tuyến | `m10/mixed_think` | think vs no-think: chính xác – token – độ trễ |
-| 11 | [module-11](module-11-function-calling-agent.md) | Function calling Qwen3, masking nhiều lượt, agent end-to-end | `m11/agent` | Từ khóa (0,885) vs base vs agent |
-| 12 | [module-12](module-12-retrieval-embedding-reranker.md) | BM25, Qwen3-Embedding + LoRA (MNRL, NO_DUPLICATES), Qwen3-Reranker, RAG đầu-cuối | `m12/qwen3_emb_lora` | 5 retriever; ngữ cảnh dựng sẵn vs truy xuất thật |
-| 13 | [module-13](module-13-merge-gguf-imatrix-serving.md) | Merge FP16, llama.cpp `b12084`, **imatrix thật**, JSON Schema decoding, TTFT CPU | GGUF + `quant_report.json` | F16/Q8/Q4/Q3 ± imatrix; schema vs tự do |
-| 14 | [module-14](module-14-capstone-eval-guardrails-release.md) | Sampling stability, guardrail 4 tầng, red-team, Global-MMLU vi, hiệu chuẩn LLM-judge | `release_dossier.json`, `MODEL_CARD.md` | Bảng tổng kết 7 mốc |
-| 15 | [module-15](module-15-production-ops-monitoring-feedback.md) | **Vận hành sau phát hành**: API FastAPI, cổng champion/challenger, kiểm thử tải p95 & số replica, drift (PSI), nhãn trễ + Cohen's κ, chaos test KillSwitch, điều kiện huấn luyện lại | API chạy thật + `ops_report.json` + runbook | Champion vs challenger (sau guardrail); tuần 1 vs tuần 2 |
+| 00 | [module-00](module-00/module-00-colab-qwen3-anatomy-baseline.md) ([HTML](module-00/module-00-colab-qwen3-anatomy-baseline.html), [sơ đồ](module-00/module-00-diagram.html)) | Giải phẫu Qwen3, token tiếng Việt, NF4, thinking on/off, sinh theo lô | Máy X-quang token, bộ sinh theo lô, **baseline** | VRAM ước tính vs thực đo; batch 1 vs 8 |
+| 01 | [module-01](module-01/module-01-dataset-evaluator-prompt-baseline.md) | Dữ liệu RAFT sinh bằng luật, chia nhóm, kiểm toán rò rỉ, bộ chấm 8 chỉ số, bootstrap, McNemar | Báo cáo kiểm toán dữ liệu, baseline few-shot | Zero-shot vs 2-shot vs 3-shot |
+| 02 | [module-02](module-02/module-02-first-lora-sft-manual-masking.md) | **Loss masking tự viết**, LoRA tính tay 17.432.576 tham số, QLoRA, HF `Trainer` | Adapter `m02/lora_r16` | Base vs SFT (McNemar) |
+| 03 | [module-03](module-03/module-03-dora-rslora-controlled-ablation.md) | DoRA, rsLoRA, **ablation có kiểm soát** | Báo cáo ablation 4 biến thể | LoRA vs DoRA vs LoRA-r64 vs rsLoRA-r64 |
+| 04 | [module-04](module-04/module-04-unsloth-trl-neftune-fairness.md) | Unsloth, TRL `SFTTrainer`, bẫy `max_length=1024`, NEFTune, W&B | Adapter Unsloth, bảng tốc độ | HF vs Unsloth; **Fairness 2×2** |
+| 05 | [module-05](module-05/module-05-raft-distractors-refusal-ablation.md) | RAFT: văn bản nhiễu khó, học từ chối, ngân sách bước cố định | Ma trận 6 loại lỗi | Oracle-only vs RAFT-0% vs RAFT-30% |
+| 06 | [module-06](module-06/module-06-hyperparams-debugging-tracking.md) | Quét LR trên **val**, early stopping đúng, lab OOM/NaN/phân kỳ/overfit | **`m06/sft_best`** + sổ tay debug | 3 LR; test đo đúng 1 lần |
+| 07 | [module-07](module-07/module-07-synthetic-data-factory.md) | Dữ liệu tổng hợp bằng chính Qwen3, phễu lọc, dedup, data card | `m07/sft_aug` + data card | sft_best vs sft_aug theo lát cắt |
+| 08 | [module-08](module-08/module-08-preference-dpo-vs-orpo.md) | Khai thác lỗi **on-policy**, DPO (adapter `ref`), ORPO | `m08/sft_dpo`, `m08/orpo_from_base` | SFT vs SFT→DPO vs ORPO |
+| 09 | [module-09](module-09/module-09-grpo-verifiable-rewards.md) | GRPO, 3 phần thưởng kiểm chứng, ràng buộc batch, reward hacking | `m09/grpo` | expired_recall / false_expired trước–sau |
+| 10 | [module-10](module-10/module-10-qwen3-thinking-mode.md) | Hybrid thinking, sụp đổ suy luận, SFT trộn 2 chế độ, định tuyến | `m10/mixed_think` | think vs no-think: chính xác – token – độ trễ |
+| 11 | [module-11](module-11/module-11-function-calling-agent.md) | Function calling Qwen3, masking nhiều lượt, agent end-to-end | `m11/agent` | Từ khóa (0,885) vs base vs agent |
+| 12 | [module-12](module-12/module-12-retrieval-embedding-reranker.md) | BM25, Qwen3-Embedding + LoRA (MNRL, NO_DUPLICATES), Qwen3-Reranker, RAG đầu-cuối | `m12/qwen3_emb_lora` | 5 retriever; ngữ cảnh dựng sẵn vs truy xuất thật |
+| 13 | [module-13](module-13/module-13-merge-gguf-imatrix-serving.md) | Merge FP16, llama.cpp `b12084`, **imatrix thật**, JSON Schema decoding, TTFT CPU | GGUF + `quant_report.json` | F16/Q8/Q4/Q3 ± imatrix; schema vs tự do |
+| 14 | [module-14](module-14/module-14-capstone-eval-guardrails-release.md) | Sampling stability, guardrail 4 tầng, red-team, Global-MMLU vi, hiệu chuẩn LLM-judge | `release_dossier.json`, `MODEL_CARD.md` | Bảng tổng kết 7 mốc |
+| 15 | [module-15](module-15/module-15-production-ops-monitoring-feedback.md) | **Vận hành sau phát hành**: API FastAPI, cổng champion/challenger, kiểm thử tải p95 & số replica, drift (PSI), nhãn trễ + Cohen's κ, chaos test KillSwitch, điều kiện huấn luyện lại | API chạy thật + `ops_report.json` + runbook | Champion vs challenger (sau guardrail); tuần 1 vs tuần 2 |
 
 ## Chuỗi checkpoint (buổi sau nạp sản phẩm của buổi trước)
 ```

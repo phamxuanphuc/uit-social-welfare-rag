@@ -4,7 +4,7 @@
 |---|---|
 | Thời lượng | 3 giờ (45 phút lý thuyết, 2 giờ 15 phút thực hành). Có thể tách thành 2 lần ngồi: lần 1 làm Phần A đến C, lần 2 làm Phần D đến F |
 | Cần biết trước | Python cơ bản (biến, vòng lặp, hàm) và biết mở Google Colab. Không cần biết Transformer hay PyTorch |
-| Chuẩn bị | Tài khoản Google (dùng Colab T4 miễn phí) và repo đồ án clone được (xem [README](README.md)) |
+| Chuẩn bị | Tài khoản Google (dùng Colab T4 miễn phí) và repo đồ án clone được (xem [README](../README.md)) |
 | Sản phẩm cuối buổi | (1) Hàm `xray` soi mô hình đoán chữ tiếp theo; (2) Hàm `generate_batch` hỏi nhiều câu cùng lúc; (3) Dòng điểm baseline `M00/base-zero-shot` trên 100 câu test |
 | Cách viết code | Mỗi ô tối đa ~10 dòng, đi theo đúng một nhịp: mục tiêu, code, giải thích, kết quả nên thấy, lỗi hay gặp |
 
@@ -218,7 +218,7 @@ from p01kit.colab import check_env; check_env()   # đúng bản ghim? torch tro
 
 - **Giải thích:** `sys.path.insert` báo cho Python chỗ tìm thư mục `p01kit` của đồ án. Thư mục `P01_RUNS` nằm trên Google Drive nên dù Colab có ngắt kết nối thì bảng điểm và kết quả của bạn vẫn còn.
 - **Kết quả nên thấy:** In ra `p01kit 2.0.0 | model: Qwen/Qwen3-1.7B`, dòng `GPU: {'name': 'Tesla T4', ...}` và thông báo môi trường khớp bản ghim.
-- **Mẹo tiết kiệm hạn mức:** Đọc thêm mục *Học trên Colab T4 miễn phí* trong [README](README.md) để biết cách ngắt GPU khi không dùng và cách chạy tiếp khi bị rớt phiên.
+- **Mẹo tiết kiệm hạn mức:** Đọc thêm mục *Học trên Colab T4 miễn phí* trong [README](../README.md) để biết cách ngắt GPU khi không dùng và cách chạy tiếp khi bị rớt phiên.
 - **Lỗi hay gặp:** Nếu thấy cảnh báo `transformers: đang là ..., bản ghim là 5.17.0`, bạn quên chạy Ô 0a-3. Nếu thấy cảnh báo `torch` ngoài khoảng hỗ trợ của `unsloth`, báo cho nhóm cập nhật danh sách ghim, đừng tự nâng hay hạ từng gói lẻ.
 
 ### Ô 1 (4 dòng): Kiểm tra GPU
@@ -552,7 +552,7 @@ scoreboard.show()
 |---|---|---|---|---|---|---|---|---|
 | M00 | base-zero-shot | *(số đo của bạn)* | | | | | | |
 
-Trong [PROJECT-REQUIREMENTS.md](../PROJECT-REQUIREMENTS.md), dự án chốt sẵn 4 ngưỡng bắt buộc: `citation_precision ≥ 0.90`, `refusal_acc ≥ 0.90`, `expired_recall = 1.0`, `fairness_gap ≤ 0.10`. Bạn có thể gọi `p01kit.metrics.gate(res0["summary"])` để xem chỉ số nào đạt, chỉ số nào chưa. Sau Buổi 00 hầu hết ngưỡng chưa đạt là chuyện bình thường.
+Trong [PROJECT-REQUIREMENTS.md](../../PROJECT-REQUIREMENTS.md), dự án chốt sẵn 4 ngưỡng bắt buộc: `citation_precision ≥ 0.90`, `refusal_acc ≥ 0.90`, `expired_recall = 1.0`, `fairness_gap ≤ 0.10`. Bạn có thể gọi `p01kit.metrics.gate(res0["summary"])` để xem chỉ số nào đạt, chỉ số nào chưa. Sau Buổi 00 hầu hết ngưỡng chưa đạt là chuyện bình thường.
 
 ---
 
