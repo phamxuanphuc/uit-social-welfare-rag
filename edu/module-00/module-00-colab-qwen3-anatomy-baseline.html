@@ -1505,30 +1505,32 @@ details[open] summary::after {
     <section id="overview" class="section">
       <div class="section-head">
         <span class="section-kicker">Phần 0 · Bức tranh lớn</span>
-        <h2>Vì sao bắt đầu bằng Baseline?</h2>
+        <h2>Vì sao phải đo baseline trước?</h2>
       </div>
-      <p class="prose">Ở công ty, khi bạn đề xuất fine-tune, câu đầu tiên sếp hỏi luôn là: <strong>“Mô hình gốc đang được bao nhiêu điểm?”</strong>. Không có baseline thì không chứng minh được fine-tune có ích, cũng không biết dừng ở đâu là đủ.</p>
+      <p class="prose">Khi đề xuất fine-tune ở công ty, câu đầu tiên luôn là: "Mô hình gốc đang được bao nhiêu điểm?". Không có mốc ban đầu thì không chứng minh được fine-tune có hiệu quả hay không, cũng không biết khi nào nên dừng.</p>
       <div class="callout">
-        <span class="callout-title">Nguyên tắc vàng của cả lộ trình 16 buổi</span>
-        <p class="prose">Mọi buổi đều đo trên <strong>cùng 100 câu test</strong> (<code>edu/data/p01_test.jsonl</code>), cùng prompt (<code>p01kit.prompts.render_prompt</code>), cùng bộ chấm. Nhờ vậy con số giữa các buổi so sánh được với nhau — giống cân sức khỏe luôn bằng cùng một cái cân.</p>
+        <span class="callout-title">Nguyên tắc xuyên suốt 16 buổi</span>
+        <p class="prose">Mọi phiên bản đều chấm trên đúng <strong>100 câu test</strong> trong <code>edu/data/p01_test.jsonl</code>, cùng prompt (<code>p01kit.prompts.render_prompt</code>) và cùng bộ chấm để điểm số so sánh trực tiếp được với nhau.</p>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Phần</th>
-              <th>Câu hỏi trả lời</th>
-              <th>Các ô thực hành</th>
-              <th>Phiên ngồi gợi ý</th>
+              <th>Trọng tâm</th>
+              <th>Các ô</th>
+              <th>Thời lượng</th>
+              <th>Ghi chú đứng lớp</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td><strong>A. Chuẩn bị</strong></td><td>Máy Colab và bộ thư viện ghim đã sẵn sàng chưa?</td><td><code>0a</code>, <code>0b</code>, <code>1</code></td><td>Lần ngồi 1</td></tr>
-            <tr><td><strong>B. Mô hình nhìn chữ thế nào</strong></td><td>Câu tiếng Việt bị cắt thành những mảnh token nào?</td><td><code>2</code>, <code>3</code></td><td>Lần ngồi 1</td></tr>
-            <tr><td><strong>C. Máy đoán chữ</strong></td><td>Mô hình nặng bao nhiêu? Nó “nghĩ” ra chữ kế tiếp ra sao?</td><td><code>4</code>, <code>5</code>, <code>6</code>, <code>7</code></td><td>Lần ngồi 1</td></tr>
-            <tr><td><strong>D. Nói chuyện với mô hình</strong></td><td>Chat template và thinking mode hoạt động thế nào?</td><td><code>8</code>, <code>9</code></td><td>Lần ngồi 2</td></tr>
-            <tr><td><strong>E. Chạy nhanh</strong></td><td>Làm sao hỏi 100 câu mà không chờ cả giờ?</td><td><code>10</code>, <code>11</code></td><td>Lần ngồi 2</td></tr>
-            <tr><td><strong>F. Baseline</strong></td><td>Mô hình gốc được bao nhiêu điểm và hay sai kiểu gì?</td><td><code>12</code>, <code>13</code>, <code>14</code></td><td>Lần ngồi 2</td></tr>
+            <tr><td><strong>Lý thuyết</strong></td><td>5 ý cốt lõi + Từ điển nhanh</td><td>Mục 0–1</td><td>45'</td><td>Có thể lồng vào lúc chờ cài gói Ô 0a-2</td></tr>
+            <tr><td><strong>A. Chuẩn bị</strong></td><td>Bật T4, tải repo, cài thư viện, kiểm tra máy</td><td><code>0a</code>, <code>0b</code>, <code>1</code></td><td>20'</td><td>Nút chờ: Ô 0a-2 cài gói ~2–3'</td></tr>
+            <tr><td><strong>B. Tokenizer</strong></td><td>Tiếng Việt tốn token hơn tiếng Anh, token đặc biệt</td><td><code>2</code>, <code>3</code></td><td>15'</td><td>Chạy nhanh (&lt; 10 giây)</td></tr>
+            <tr><td><strong>C. Máy đoán chữ</strong></td><td>Nạp 4-bit, soi <code>xray</code>, thử temperature, nhẩm VRAM</td><td><code>4</code>, <code>5</code>, <code>6</code>, <code>7</code></td><td>35'</td><td>Nút chờ: Ô 4 tải 3,4 GB lần đầu ~1–2'</td></tr>
+            <tr><td><strong>D. Hội thoại</strong></td><td>Chat template và đo chi phí thinking</td><td><code>8</code>, <code>9</code></td><td>20'</td><td>Cho học viên tự thử thêm câu hỏi</td></tr>
+            <tr><td><strong>E. Chạy nhanh</strong></td><td>Đệm trái và hàm sinh theo lô <code>generate_batch</code></td><td><code>10</code>, <code>11</code></td><td>20'</td><td>So tốc độ <code>batch_size=1</code> vs <code>8</code></td></tr>
+            <tr><td><strong>F. Baseline</strong></td><td>Xem tập test, chấm 100 câu, phân loại 5 câu sai</td><td><code>12</code>, <code>13</code>, <code>14</code></td><td>25'</td><td>Nút chờ: Ô 13 chạy ~2–5' (giải thích <code>95%CI</code>)</td></tr>
           </tbody>
         </table>
       </div>
@@ -1809,22 +1811,10 @@ details[open] summary::after {
           <label class="cell-done-label"><input type="checkbox" class="cell-check" data-cell="0a"> Đã chạy xong</label>
         </div>
         <div class="cell-body">
-          <p class="cell-goal"><strong>Mục tiêu:</strong> Đưa code + dữ liệu đồ án vào Colab và cài đúng phiên bản đã ghim. <strong>Tạo 3 ô Colab riêng biệt</strong> (<code>0a-1</code>, <code>0a-2</code>, <code>0a-3</code>), dán từng khung code rồi chạy lần lượt. Nếu repo để private, mở <em>Secrets</em> (biểu tượng chìa khóa bên trái Colab), thêm <code>GITHUB_TOKEN</code> và bật <em>Notebook access</em>.</p>
+          <p class="cell-goal">Repo <code>uit-social-welfare-rag</code> đã mở public (không cần token) và cung cấp 3 thứ dùng chung cho cả 16 buổi: <code>requirements-colab.txt</code> (bản thư viện khớp nhau), <code>p01kit/</code> (hàm kiểm tra máy, chạy lô, chấm điểm) và <code>edu/data/p01_test.jsonl</code> (100 câu test cố định). Tạo <strong>3 ô Colab riêng</strong> (<code>0a-1</code>, <code>0a-2</code>, <code>0a-3</code>) rồi chạy lần lượt:</p>
           <div class="code-block">
-            <div class="code-bar"><span>Ô 0a-1 · Python · Tải code từ GitHub</span><button class="copy-btn" type="button">Chép code</button></div>
-            <pre><code>import os, subprocess, base64
-REPO, URL = "/content/uit-social-welfare-rag", "https://github.com/phamxuanphuc/uit-social-welfare-rag.git"
-if not os.path.exists(REPO):
-    env = dict(os.environ)
-    try:  # repo private: đọc GITHUB_TOKEN từ Colab Secrets; repo public thì bỏ qua
-        from google.colab import userdata
-        basic = base64.b64encode(f"x-access-token:{userdata.get('GITHUB_TOKEN')}".encode()).decode()
-        env |= {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": "http.extraHeader",
-                "GIT_CONFIG_VALUE_0": f"Authorization: Basic {basic}"}  # token chỉ nằm trong biến môi trường
-    except Exception:
-        pass
-    r = subprocess.run(["git", "clone", "--depth", "1", URL, REPO], env=env, capture_output=True, text=True)
-    assert r.returncode == 0, f"git clone lỗi:\n{r.stderr}"</code></pre>
+            <div class="code-bar"><span>Ô 0a-1 · Bash · Tải repo public</span><button class="copy-btn" type="button">Chép code</button></div>
+            <pre><code>!git clone --depth 1 https://github.com/phamxuanphuc/uit-social-welfare-rag.git /content/uit-social-welfare-rag</code></pre>
           </div>
           <div class="code-block">
             <div class="code-bar"><span>Ô 0a-2 · Bash · Cài thư viện đã ghim (mất ~2–3 phút)</span><button class="copy-btn" type="button">Chép code</button></div>
@@ -1835,8 +1825,7 @@ if not os.path.exists(REPO):
             <pre><code>import os; os.kill(os.getpid(), 9)  # khởi động lại runtime để nạp thư viện mới (Colab sẽ tự kết nối lại)</code></pre>
           </div>
           <ul class="cell-notes">
-            <li><strong>Giải thích:</strong> Thông báo "Your session crashed" sau Ô 0a-3 là bình thường. Token truyền qua biến môi trường <code>GIT_CONFIG_*</code> để không lộ ra màn hình lỗi hay lưu vào <code>.git/config</code>. Ghim phiên bản (<code>transformers==5.17.0</code>, <code>trl==1.15.0</code>...) giúp code chạy ổn định về sau.</li>
-            <li class="note-warn"><strong>Lỗi hay gặp:</strong> Quên chạy Ô 0a-3 khiến Python dùng bản <code>transformers</code> cũ của Colab, sinh lỗi khó hiểu ở các ô sau.</li>
+            <li class="note-warn"><strong>Lưu ý:</strong> Thông báo "Your session crashed" sau Ô 0a-3 là bình thường vì ta chủ động khởi động lại Python. Quên chạy ô này khiến Python tiếp tục dùng bản <code>transformers</code> cũ của Colab.</li>
           </ul>
         </div>
       </article>

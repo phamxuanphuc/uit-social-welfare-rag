@@ -81,6 +81,8 @@ def test_module00_html_has_theme_and_interactive_widgets():
     for term in ("<strong>Embedding</strong>", "<strong>KV-cache</strong>", "<strong>RAG</strong>"):
         assert term in text
     assert 'data-metric="answer_acc"' in text
+    assert "GITHUB_TOKEN" not in text
+    assert "Ghi chú đứng lớp" in text
 
 
 def test_module00_diagram_exists_balanced_and_self_contained():
